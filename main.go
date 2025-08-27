@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type plotC struct {
+	results []Result
+	attack  string
+}
+
 func main() {
 	hfs := flag.NewFlagSet("suzi", flag.ExitOnError)
 
@@ -24,17 +29,23 @@ func main() {
 
 	runtime.GOMAXPROCS(*numCPUS)
 
-	results := make([]Result, *numOfReq)
+	// results := make([]Result, *numOfReq)
+
+	var pc plotC
 
 	switch strings.ToLower(*attacktype) {
 	case "basic":
-		results = basicAttack(*url, *numOfReq, *rate, *method, *timeout)
+		pc = plotC{results: basicAttack(*url, *numOfReq, *rate, *method, *timeout), attack: "Basic"}
+	case "burst":
+		pc = plotC{results: burstAttack(*url, *numOfReq, *method, *timeout), attack: "Burst"}
+	case "random":
+		pc = plotC{results: randomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), attack: "random"}
 	default:
 		fmt.Println("Unknown attack type:", *attacktype)
 		return
 	}
 
 	if *plot {
-		plotResults(results)
+		plotResults(pc)
 	}
 }

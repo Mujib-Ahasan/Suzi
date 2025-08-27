@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"sync"
 	"time"
@@ -70,5 +71,46 @@ func basicAttack(url string, numRequests int, rate int, method string, timeout i
 	sc := showResults(results, numRequests, "basic")
 	fmt.Printf("%+v\n", sc)
 
+	return results
+}
+
+func burstAttack(url string, numRequests int, method string, timeout int) []Result {
+	var wg sync.WaitGroup
+	resultsChan := make(chan Result, numRequests)
+
+	for i := 0; i < numRequests; i++ {
+		wg.Add(1)
+		go makeRequest(url, method, &wg, resultsChan, timeout)
+	}
+
+	wg.Wait()
+	close(resultsChan)
+
+	results := make([]Result, 0, numRequests)
+	for r := range resultsChan {
+		results = append(results, r)
+	}
+	sc := showResults(results, numRequests, "burst")
+	fmt.Printf("%+v\n", sc)
+	return results
+}
+
+func randomLoadAttack(url string, numRequests int, method string, rate int, timeout int) []Result {
+	var wg sync.WaitGroup
+	resultsChan := make(chan Result, numRequests)
+
+	for i := 0; i < numRequests; i++ {
+		wg.Add(1)
+		go makeRequest(url, method, &wg, resultsChan, timeout)
+		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond / time.Duration(rate))
+	}
+	wg.Wait()
+	close(resultsChan)
+	results := make([]Result, 0, numRequests)
+	for result := range resultsChan {
+		results = append(results, result)
+	}
+	sc := showResults(results, numRequests, "random")
+	fmt.Printf("%+v\n", sc)
 	return results
 }
