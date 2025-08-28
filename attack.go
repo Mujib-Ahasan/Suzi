@@ -114,3 +114,37 @@ func randomLoadAttack(url string, numRequests int, method string, rate int, time
 	fmt.Printf("%+v\n", sc)
 	return results
 }
+
+func rampUpAttack(url string, numRequests int, startRate int, peakRate int, method string, timeout int) []Result {
+	var wg sync.WaitGroup
+	resultsChan := make(chan Result, numRequests)
+
+	// Linearly ramp rate from startRate → peakRate
+	rateStep := float64(peakRate-startRate) / float64(numRequests)
+
+	for i := 0; i < numRequests; i++ {
+		wg.Add(1)
+
+		// Calculate current rate (linearly increasing)
+		currentRate := float64(startRate) + (rateStep * float64(i))
+
+		// Convert rate → sleep duration (inverse relation)
+		sleepDuration := time.Second / time.Duration(currentRate)
+
+		go makeRequest(url, method, &wg, resultsChan, timeout)
+
+		// Control pacing here
+		time.Sleep(sleepDuration)
+	}
+
+	wg.Wait()
+	close(resultsChan)
+	results := make([]Result, 0, numRequests)
+	for result := range resultsChan {
+		results = append(results, result)
+	}
+
+	sc := showResults(results, numRequests, "burst")
+	fmt.Printf("%+v\n", sc)
+	return results
+}

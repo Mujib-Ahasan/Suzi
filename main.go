@@ -40,6 +40,8 @@ func main() {
 		pc = plotC{results: burstAttack(*url, *numOfReq, *method, *timeout), attack: "Burst"}
 	case "random":
 		pc = plotC{results: randomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), attack: "random"}
+	case "rampup":
+		pc = plotC{results: rampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), attack: "Ramp-Up"}
 	default:
 		fmt.Println("Unknown attack type:", *attacktype)
 		return
