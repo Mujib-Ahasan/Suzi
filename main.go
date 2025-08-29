@@ -8,8 +8,13 @@ import (
 	"strings"
 )
 
+type PResultIn struct {
+	PRes inResult
+	NRes []Result
+}
+
 type plotC struct {
-	results []Result
+	results PResultIn
 	attack  string
 }
 

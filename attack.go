@@ -44,7 +44,7 @@ func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results cha
 	resp_results <- Result{Status: resp.Status, Elapsed: elapsed}
 }
 
-func basicAttack(url string, numRequests int, rate int, method string, timeout int) []Result {
+func basicAttack(url string, numRequests int, rate int, method string, timeout int) PResultIn {
 	// numRequests=total number of request to be fired.
 	// ratee=requests per second (RPS).
 	var wg sync.WaitGroup
@@ -71,10 +71,10 @@ func basicAttack(url string, numRequests int, rate int, method string, timeout i
 	sc := showResults(results, numRequests, "basic")
 	fmt.Printf("%+v\n", sc)
 
-	return results
+	return PResultIn{PRes: sc, NRes: results}
 }
 
-func burstAttack(url string, numRequests int, method string, timeout int) []Result {
+func burstAttack(url string, numRequests int, method string, timeout int) PResultIn {
 	var wg sync.WaitGroup
 	resultsChan := make(chan Result, numRequests)
 
@@ -92,10 +92,10 @@ func burstAttack(url string, numRequests int, method string, timeout int) []Resu
 	}
 	sc := showResults(results, numRequests, "burst")
 	fmt.Printf("%+v\n", sc)
-	return results
+	return PResultIn{PRes: sc, NRes: results}
 }
 
-func randomLoadAttack(url string, numRequests int, method string, rate int, timeout int) []Result {
+func randomLoadAttack(url string, numRequests int, method string, rate int, timeout int) PResultIn {
 	var wg sync.WaitGroup
 	resultsChan := make(chan Result, numRequests)
 
@@ -112,10 +112,10 @@ func randomLoadAttack(url string, numRequests int, method string, rate int, time
 	}
 	sc := showResults(results, numRequests, "random")
 	fmt.Printf("%+v\n", sc)
-	return results
+	return PResultIn{PRes: sc, NRes: results}
 }
 
-func rampUpAttack(url string, numRequests int, startRate int, peakRate int, method string, timeout int) []Result {
+func rampUpAttack(url string, numRequests int, startRate int, peakRate int, method string, timeout int) PResultIn {
 	var wg sync.WaitGroup
 	resultsChan := make(chan Result, numRequests)
 
@@ -146,5 +146,5 @@ func rampUpAttack(url string, numRequests int, startRate int, peakRate int, meth
 
 	sc := showResults(results, numRequests, "burst")
 	fmt.Printf("%+v\n", sc)
-	return results
+	return PResultIn{PRes: sc, NRes: results}
 }
