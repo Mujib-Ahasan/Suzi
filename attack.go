@@ -15,7 +15,14 @@ type Result struct {
 }
 
 // setting it global so to avoid handshake each time(no TCP/TLS each time)
-var client_body = &http.Client{}
+var client_body *http.Client
+
+func makeHandshake() {
+	fmt.Println("New connection made!!!")
+	client_body = &http.Client{}
+}
+
+// = &http.Client{}
 
 // this function sends the HTTP request and send response woth some data through chanel.
 func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results chan<- Result, timeout int) {
@@ -47,6 +54,7 @@ func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results cha
 func basicAttack(url string, numRequests int, rate int, method string, timeout int) PResultIn {
 	// numRequests=total number of request to be fired.
 	// ratee=requests per second (RPS).
+	makeHandshake()
 	var wg sync.WaitGroup
 	//multiple channels
 	results_chan := make(chan Result, numRequests)
@@ -75,6 +83,8 @@ func basicAttack(url string, numRequests int, rate int, method string, timeout i
 }
 
 func burstAttack(url string, numRequests int, method string, timeout int) PResultIn {
+	makeHandshake()
+
 	var wg sync.WaitGroup
 	resultsChan := make(chan Result, numRequests)
 
@@ -96,6 +106,8 @@ func burstAttack(url string, numRequests int, method string, timeout int) PResul
 }
 
 func randomLoadAttack(url string, numRequests int, method string, rate int, timeout int) PResultIn {
+	makeHandshake()
+
 	var wg sync.WaitGroup
 	resultsChan := make(chan Result, numRequests)
 
@@ -116,6 +128,8 @@ func randomLoadAttack(url string, numRequests int, method string, rate int, time
 }
 
 func rampUpAttack(url string, numRequests int, startRate int, peakRate int, method string, timeout int) PResultIn {
+	makeHandshake()
+
 	var wg sync.WaitGroup
 	resultsChan := make(chan Result, numRequests)
 
@@ -144,7 +158,7 @@ func rampUpAttack(url string, numRequests int, startRate int, peakRate int, meth
 		results = append(results, result)
 	}
 
-	sc := showResults(results, numRequests, "burst")
+	sc := showResults(results, numRequests, "rampup")
 	fmt.Printf("%+v\n", sc)
 	return PResultIn{PRes: sc, NRes: results}
 }

@@ -93,7 +93,7 @@ func plotResults(plot plotC) {
 
 	line.SetXAxis(xData).AddSeries("Time for Response", yData)
 
-	//save the chart as an html file.
+	//saving the chart as html file.
 	file_name := "result-" + plot.attack + ".html"
 	f, err := os.Create(file_name)
 	if err != nil {

@@ -41,8 +41,8 @@ func showResults(results []Result, numRequests int, attack string) inResult {
 			fmt.Println("Error:", r.Error)
 			errorCount++
 		} else {
-			fmt.Println("Response Status:", r.Status)
-			fmt.Println("Response Time:", r.Elapsed)
+			// fmt.Println("Response Status:", r.Status)
+			// fmt.Println("Response Time:", r.Elapsed)
 			totalTime += r.Elapsed
 			successCount++
 			latencies = append(latencies, r.Elapsed)
