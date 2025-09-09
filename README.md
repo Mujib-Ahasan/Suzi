@@ -15,8 +15,8 @@ It’s designed for developers and DevOps engineers who want quick insights into
      - Includes a latency summary table showing percentile breakdown.
 - ### Configurable Timeout per request:
   simulate slow responses or protect against server hangs. One of the important feature in day-to-day server testing (basic).
-- ### Extensible Design:
-  future-ready to add features like email notifications after testing or CI/CD integration.
+- ### Email Option:
+  Email notifications after testing or CI/CD integration can be sent for better review.
 
 ## Installation
 - #### Clone the repo first:
@@ -49,7 +49,31 @@ It’s designed for developers and DevOps engineers who want quick insights into
 | `-rate`     | 1          | Number of requests per second            |
 | `-timeout`  | 5          | Request timeout in seconds               |
 | `-cpus`     | NumCPU     | Number of CPU cores to use               |
-| `-plot`     | `false`    | Generate interactive HTML report         |
+| `-email`     | `false`    | Send results via email        |
+| `-emailTo`     | `"you@local.test"`    | Receiver email-id       |
+| `-emailFrom`     | `"Suzi <noreply@gmail.com>"`    | Sender email-id         |
+| `-smtpHost`     | `"localhost"`    | For production use "smtp.gmail.com"     |
+| `-smtpPort`     | `1025`    |For Production use 465 (donot use 587)     |
+| `-smtp-user`     | `os.Getenv("SMTP_USER")`    | Set to the email address that owns the app password (set env var for this)|
+| `-smtp-pass`     | `os.Getenv("SMTP_PASS")`    | App Password generated from Gmail (set env var for this)  |
+| `-smtpTLS`     | `false`    | True for production        |
+| `-smtp-retries`     | `3`    | Email send retries         |
+| `-smtp-timeout`     | `10`    |Email send timeout in seconds      |
+
+## Email Option
+- For Local testing use Docker `docker run --name mailhog -d -p 8025:8025 -p 1025:1025 mailhog/mailhog`. After starting the container open localhost at port 8025. </br>
+  Run the command `./suzi -url https://example.com -rate 5 -req 50 -email -atk mailAll`
+
+- For production usecase run the command carefully `./suzi -url https://example.com -rate 5 -req 50 -email -atk mailAll -email /` </br>
+   `-emailTo "<receiver email-id> -emailFrom "Suzi <email-addr that owns app-password>" /` </br>
+   `-smtpHost "smtp.gmail.com" -smtpPort 465  -smtpTLS true` </br>
+  After that receiver should get a email like this.
+![WhatsApp Image 2025-09-09 at 1 31 07 PM](https://github.com/user-attachments/assets/5e93931f-4f00-44fb-8c12-8be5364f2e58)
+![WhatsApp Image 2025-09-09 at 1 32 00 PM](https://github.com/user-attachments/assets/94da2a83-6c7d-4220-9e19-05db4411a15b)
+![WhatsApp Image 2025-09-09 at 1 32 28 PM](https://github.com/user-attachments/assets/4697ee51-bf20-4493-b30f-7fe4cc93b0dc)
+
+**Note: In Releases, you would get the binary for linux**
+
 
 ## Now The Most Fun One - Why Suzi? 🤔
 - Most load testers (like JMeter or Locust) are heavy, complex, and overkill for quick checks.
@@ -58,6 +82,7 @@ It’s designed for developers and DevOps engineers who want quick insights into
      - Fast – written in Go with goroutines for concurrency.
      - Extensible – easy to add attack strategies and plotting.
      - Developer-Friendly – quick experiments, local testing, and custom benchmark.
+     - Emailing - can enhance development and deployment experience.
 ## Contributing 
 Contributions are always welcome! Feel free to open issues or submit pull requests for new features, enhancements, or bug fixes.
 ## License
