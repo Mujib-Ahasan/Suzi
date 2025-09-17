@@ -15,7 +15,7 @@ type Config struct {
 	Port        int           // e.g. 587 or 465
 	Username    string        // SMTP username (email/user)
 	Password    string        // SMTP password or app password
-	From        string        // "Suzi <no-reply@yourdomain.com>"
+	From        string        // "Suzi <no-reply@domain.com>"
 	UseTLS      bool          // true for SMTPS(465) or STARTTLS as needed
 	DialTimeout time.Duration // connect timeout
 	SendTimeout time.Duration // send timeout
