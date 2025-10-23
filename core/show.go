@@ -1,23 +1,12 @@
-package main
+package core
 
 import (
 	"fmt"
 	"sort"
 	"time"
-)
 
-type inResult struct {
-	Attack             string
-	Number_Of_Requests int
-	Success_Count      int
-	Error_Count        int
-	ART                time.Duration
-	P50                time.Duration
-	P90                time.Duration
-	P95                time.Duration
-	P99                time.Duration
-	Max                time.Duration
-}
+	rs "github.com/Mujib-Ahasan/Suzi/common"
+)
 
 func percentileCalculation(latencies []time.Duration, p float64) time.Duration {
 	if len(latencies) == 0 {
@@ -30,7 +19,7 @@ func percentileCalculation(latencies []time.Duration, p float64) time.Duration {
 	return latencies[index]
 }
 
-func showResults(results []Result, numRequests int, attack string) inResult {
+func ShowResults(results []rs.Result, numRequests int, attack string) rs.InResult {
 	var totalTime time.Duration
 	var avg, p50, p90, p95, p99, max time.Duration
 
@@ -64,7 +53,7 @@ func showResults(results []Result, numRequests int, attack string) inResult {
 		}
 	}
 
-	return inResult{
+	return rs.InResult{
 		Attack:             attack,
 		Number_Of_Requests: numRequests,
 		Success_Count:      successCount,

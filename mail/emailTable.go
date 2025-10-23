@@ -1,13 +1,15 @@
-package main
+package mail
 
 import (
 	"bytes"
 	"fmt"
 	"time"
+
+	pl "github.com/Mujib-Ahasan/Suzi/common"
 )
 
 // generate a styled HTML report for email
-func BuildEmailReportHTML(plots []plotC, url string) string {
+func BuildEmailReportHTML(plots []pl.PlotC, url string) string {
 	var buf bytes.Buffer
 
 	intro := `
@@ -66,12 +68,12 @@ func BuildEmailReportHTML(plots []plotC, url string) string {
         </div>
     </div>
 `,
-			plot.attack, timestamp,
-			plot.results.PRes.Success_Count, plot.results.PRes.Error_Count,
-			float64(plot.results.PRes.P50)/float64(time.Millisecond),
-			float64(plot.results.PRes.P90)/float64(time.Millisecond),
-			float64(plot.results.PRes.P95)/float64(time.Millisecond),
-			float64(plot.results.PRes.P99)/float64(time.Millisecond),
+			plot.Attack, timestamp,
+			plot.Results.PRes.Success_Count, plot.Results.PRes.Error_Count,
+			float64(plot.Results.PRes.P50)/float64(time.Millisecond),
+			float64(plot.Results.PRes.P90)/float64(time.Millisecond),
+			float64(plot.Results.PRes.P95)/float64(time.Millisecond),
+			float64(plot.Results.PRes.P99)/float64(time.Millisecond),
 		)
 
 		buf.WriteString(tableHTML)

@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"flag"
@@ -7,17 +7,12 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	st "github.com/Mujib-Ahasan/Suzi/attacks"
+	cm "github.com/Mujib-Ahasan/Suzi/common"
+	pr "github.com/Mujib-Ahasan/Suzi/core"
+	ml "github.com/Mujib-Ahasan/Suzi/mail"
 )
-
-type PResultIn struct {
-	PRes inResult
-	NRes []Result
-}
-
-type plotC struct {
-	results PResultIn
-	attack  string
-}
 
 func main() {
 	hfs := flag.NewFlagSet("suzi", flag.ExitOnError)
@@ -45,33 +40,33 @@ func main() {
 
 	runtime.GOMAXPROCS(*numCPUS)
 
-	var pc plotC
-	var attackAll []plotC
+	var pc cm.PlotC
+	var attackAll []cm.PlotC
 
 	switch strings.ToLower(*attacktype) {
 	case "mailall":
-		attackAll = append(attackAll, plotC{results: basicAttack(*url, *numOfReq, *rate, *method, *timeout), attack: "Basic"})
-		attackAll = append(attackAll, plotC{results: burstAttack(*url, *numOfReq, *method, *timeout), attack: "Burst"})
-		attackAll = append(attackAll, plotC{results: randomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), attack: "random"})
-		attackAll = append(attackAll, plotC{results: rampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), attack: "Ramp-Up"})
+		attackAll = append(attackAll, cm.PlotC{Results: st.BasicAttack(*url, *numOfReq, *rate, *method, *timeout), Attack: "Basic"})
+		attackAll = append(attackAll, cm.PlotC{Results: st.BurstAttack(*url, *numOfReq, *method, *timeout), Attack: "Burst"})
+		attackAll = append(attackAll, cm.PlotC{Results: st.RandomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), Attack: "random"})
+		attackAll = append(attackAll, cm.PlotC{Results: st.RampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), Attack: "Ramp-Up"})
 	case "basic":
-		pc = plotC{results: basicAttack(*url, *numOfReq, *rate, *method, *timeout), attack: "Basic"}
+		pc = cm.PlotC{Results: st.BasicAttack(*url, *numOfReq, *rate, *method, *timeout), Attack: "Basic"}
 	case "burst":
-		pc = plotC{results: burstAttack(*url, *numOfReq, *method, *timeout), attack: "Burst"}
+		pc = cm.PlotC{Results: st.BurstAttack(*url, *numOfReq, *method, *timeout), Attack: "Burst"}
 	case "random":
-		pc = plotC{results: randomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), attack: "random"}
+		pc = cm.PlotC{Results: st.RandomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), Attack: "random"}
 	case "rampup":
-		pc = plotC{results: rampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), attack: "Ramp-Up"}
+		pc = cm.PlotC{Results: st.RampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), Attack: "Ramp-Up"}
 	default:
 		fmt.Println("Unknown attack type:", *attacktype)
 		return
 	}
 
 	if *plot {
-		plotResults(pc)
+		pr.PlotResults(pc)
 	}
 
-	cfg := Config{
+	cfg := ml.Config{
 		Host:        *smtpHost,
 		Port:        *smtpPort,
 		Username:    *smtpUser,
@@ -84,7 +79,7 @@ func main() {
 	}
 
 	if *emailEnable {
-		reportHTML := BuildEmailReportHTML(attackAll, *url)
-		cfg.sendMail(*emailTo, reportHTML)
+		reportHTML := ml.BuildEmailReportHTML(attackAll, *url)
+		cfg.SendMail(*emailTo, reportHTML)
 	}
 }

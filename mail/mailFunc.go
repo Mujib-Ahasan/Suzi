@@ -1,4 +1,4 @@
-package main
+package mail
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func (cfg *Config) sendMail(emailTo string, reportHTML string) {
+func (cfg *Config) SendMail(emailTo string, reportHTML string) {
 	m := New(*cfg)
 	// fmt.Println("debug-mailFunc_1")
 

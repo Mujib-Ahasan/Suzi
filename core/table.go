@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	rs "github.com/Mujib-Ahasan/Suzi/common"
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 )
@@ -15,16 +16,16 @@ import (
 // github.com/go-echarts/go-echarts/v2/opts: contains the configration structs that describe chart data.
 
 // generate a line table/chart of response time.
-func plotResults(plot plotC) {
+func PlotResults(plot rs.PlotC) {
 	line := charts.NewLine()
 	//xData holds the request numbering
-	xData := make([]int, len(plot.results.NRes))
+	xData := make([]int, len(plot.Results.NRes))
 	for i := range xData {
 		xData[i] = i + 1
 	}
 	//yData holds the number of miliseconds it took!
-	yData := make([]opts.LineData, len(plot.results.NRes))
-	for i, result := range plot.results.NRes {
+	yData := make([]opts.LineData, len(plot.Results.NRes))
+	for i, result := range plot.Results.NRes {
 		// a single data point for a line chart.
 		yData[i] = opts.LineData{Value: result.Elapsed.Milliseconds()}
 	}
@@ -85,16 +86,16 @@ func plotResults(plot plotC) {
         </div>
     </div>
 `,
-		float64(plot.results.PRes.P50)/float64(time.Millisecond),
-		float64(plot.results.PRes.P90)/float64(time.Millisecond),
-		float64(plot.results.PRes.P95)/float64(time.Millisecond),
-		float64(plot.results.PRes.P99)/float64(time.Millisecond),
+		float64(plot.Results.PRes.P50)/float64(time.Millisecond),
+		float64(plot.Results.PRes.P90)/float64(time.Millisecond),
+		float64(plot.Results.PRes.P95)/float64(time.Millisecond),
+		float64(plot.Results.PRes.P99)/float64(time.Millisecond),
 	)
 
 	line.SetXAxis(xData).AddSeries("Time for Response", yData)
 
 	//saving the chart as html file.
-	file_name := "result-" + plot.attack + ".html"
+	file_name := "result-" + plot.Attack + ".html"
 	f, err := os.Create(file_name)
 	if err != nil {
 		fmt.Println("Could not create results.html:", err)
