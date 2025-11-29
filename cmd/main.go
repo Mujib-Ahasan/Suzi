@@ -18,14 +18,14 @@ func main() {
 	hfs := flag.NewFlagSet("suzi", flag.ExitOnError)
 
 	url := hfs.String("url", "", "Site where you want to attack")
-	numOfReq := hfs.Int("req", 10, "Number of requests to send")
-	timeout := hfs.Int("timeout", 5, "Request timeout in seconds")
+	// numOfReq := hfs.Int("req", 10, "Number of requests to send")
+	// timeout := hfs.Int("timeout", 5, "Request timeout in seconds")
 	attacktype := hfs.String("atk", " ", "type of attack")
 	plot := hfs.Bool("plot", false, "Do ya wanna plot da test as a timeseries ?")
 	emailEnable := hfs.Bool("email", false, "Send results via email")
 	numCPUS := hfs.Int("cpus", runtime.NumCPU(), "Number of CPUs to use")
-	method := hfs.String("method", "GET", "HTTP method to use (GET, POST, etc.)")
-	rate := hfs.Int("rate", 1, "Number of requests per second")
+	// method := hfs.String("method", "GET", "HTTP method to use (GET, POST, etc.)")
+	// rate := hfs.Int("rate", 1, "Number of requests per second")
 	emailTo := hfs.String("emailTo", "you@local.test", "Comma-separated list of recipients")
 	smtpHost := hfs.String("smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
 	smtpPort := hfs.Int("smtpPort", 1025, "SMTP port (eg: 587 or 465)")
@@ -45,18 +45,18 @@ func main() {
 
 	switch strings.ToLower(*attacktype) {
 	case "mailall":
-		attackAll = append(attackAll, cm.PlotC{Results: st.BasicAttack(*url, *numOfReq, *rate, *method, *timeout), Attack: "Basic"})
-		attackAll = append(attackAll, cm.PlotC{Results: st.BurstAttack(*url, *numOfReq, *method, *timeout), Attack: "Burst"})
-		attackAll = append(attackAll, cm.PlotC{Results: st.RandomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), Attack: "random"})
-		attackAll = append(attackAll, cm.PlotC{Results: st.RampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), Attack: "Ramp-Up"})
+		attackAll = append(attackAll, cm.PlotC{Results: st.BasicAttack(st.Options{})})
+		attackAll = append(attackAll, cm.PlotC{Results: st.BurstAttack(st.Options{})})
+		attackAll = append(attackAll, cm.PlotC{Results: st.RandomLoadAttack(st.Options{})})
+		attackAll = append(attackAll, cm.PlotC{Results: st.RampUpAttack(st.Options{}, 1, 15)})
 	case "basic":
-		pc = cm.PlotC{Results: st.BasicAttack(*url, *numOfReq, *rate, *method, *timeout), Attack: "Basic"}
+		pc = cm.PlotC{Results: st.BasicAttack(st.Options{})}
 	case "burst":
-		pc = cm.PlotC{Results: st.BurstAttack(*url, *numOfReq, *method, *timeout), Attack: "Burst"}
+		pc = cm.PlotC{Results: st.BurstAttack(st.Options{})}
 	case "random":
-		pc = cm.PlotC{Results: st.RandomLoadAttack(*url, *numOfReq, *method, *rate, *timeout), Attack: "random"}
+		pc = cm.PlotC{Results: st.RandomLoadAttack(st.Options{})}
 	case "rampup":
-		pc = cm.PlotC{Results: st.RampUpAttack(*url, *numOfReq, 1, 15, *method, *timeout), Attack: "Ramp-Up"}
+		pc = cm.PlotC{Results: st.RampUpAttack(st.Options{}, 1, 15)}
 	default:
 		fmt.Println("Unknown attack type:", *attacktype)
 		return

@@ -9,25 +9,25 @@ import (
 	sr "github.com/Mujib-Ahasan/Suzi/core"
 )
 
-func BurstAttack(url string, numRequests int, method string, timeout int) rs.PResultIn {
+func BurstAttack(opts Options) rs.PResultIn {
 	makeHandshake()
 
 	var wg sync.WaitGroup
-	resultsChan := make(chan rs.Result, numRequests)
+	resultsChan := make(chan rs.Result, opts.Requests)
 
-	for i := 0; i < numRequests; i++ {
+	for i := 0; i < opts.Requests; i++ {
 		wg.Add(1)
-		go makeRequest(url, method, &wg, resultsChan, timeout)
+		go makeRequest(opts.URL, opts.Method, &wg, resultsChan, opts.Timeout)
 	}
 
 	wg.Wait()
 	close(resultsChan)
 
-	results := make([]rs.Result, 0, numRequests)
+	results := make([]rs.Result, 0, opts.Requests)
 	for r := range resultsChan {
 		results = append(results, r)
 	}
-	sc := sr.ShowResults(results, numRequests, "burst")
+	sc := sr.ShowResults(results, opts.Requests, "burst")
 	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

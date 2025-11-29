@@ -20,7 +20,7 @@ func makeHandshake() {
 // = &http.Client{}
 
 // this function sends the HTTP request and send response woth some data through chanel.
-func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results chan<- rs.Result, timeout int) {
+func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results chan<- rs.Result, timeout time.Duration) {
 	defer wg.Done()
 	start := time.Now()
 
@@ -32,7 +32,7 @@ func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results cha
 		return
 	}
 	//setting timeout.
-	client_body.Timeout = time.Duration(timeout) * time.Second
+	client_body.Timeout = timeout * time.Second
 	// sending that request....
 	resp, err := client_body.Do(req)
 	elapsed := time.Since(start)

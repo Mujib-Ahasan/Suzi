@@ -35,13 +35,10 @@ type Mailer struct {
 func New(cfg Config) *Mailer { return &Mailer{cfg: cfg} }
 
 func (m *Mailer) Send(ctx context.Context, to []string, subject, htmlBody, textBody string) error {
-	// fmt.Println("debug-mailer_1")
 
 	addr := fmt.Sprintf("%s:%d", m.cfg.Host, m.cfg.Port)
-	// fmt.Println("debug-mailer_2")
 
 	e := email.NewEmail()
-	// fmt.Println("debug-mailer_3")
 
 	e.From = m.cfg.From
 	e.To = to
@@ -52,28 +49,6 @@ func (m *Mailer) Send(ctx context.Context, to []string, subject, htmlBody, textB
 	if htmlBody != "" {
 		e.HTML = []byte(htmlBody)
 	}
-
-	// fmt.Println("debug-mailer_4")
-
-	// for _, a := range atts {
-	// 	if a.Name != "" {
-	// 		f, err := os.Open(a.Path)
-	// 		if err != nil {
-	// 			return fmt.Errorf("attach: %w", err)
-	// 		}
-	// 		defer f.Close()
-
-	// 		if _, err := e.Attach(f, a.Name, a.Name); err != nil {
-	// 			return fmt.Errorf("attach: %w", err)
-	// 		}
-	// 	} else {
-	// 		// normal attach (uses the actual filename)
-	// 		if _, err := e.AttachFile(a.Path); err != nil {
-	// 			return fmt.Errorf("attach: %w", err)
-	// 		}
-	// 	}
-	// }
-	// fmt.Println("debug-mailer_5")
 
 	var (
 		auth smtp.Auth
@@ -86,15 +61,12 @@ func (m *Mailer) Send(ctx context.Context, to []string, subject, htmlBody, textB
 		tlsC = &tls.Config{ServerName: m.cfg.Host}
 	}
 
-	// fmt.Println("debug-mailer_6")
-
 	backoff := 500 * time.Millisecond
 	attempts := m.cfg.Retries
 	if attempts < 1 {
 		attempts = 1
 	}
 
-	// fmt.Println("debug-mailer_7")
 	var lastErr error
 	for i := 0; i < attempts; i++ {
 		sendCtx, cancel := context.WithTimeout(ctx, m.cfg.SendTimeout)

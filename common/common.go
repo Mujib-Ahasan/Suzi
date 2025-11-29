@@ -13,6 +13,7 @@ type Result struct {
 type PResultIn struct {
 	PRes InResult
 	NRes []Result
+	Err  error
 }
 
 type PlotC struct {

@@ -10,16 +10,16 @@ import (
 	sr "github.com/Mujib-Ahasan/Suzi/core"
 )
 
-func RampUpAttack(url string, numRequests int, startRate int, peakRate int, method string, timeout int) rs.PResultIn {
+func RampUpAttack(opts Options, startRate int, peakRate int) rs.PResultIn {
 	makeHandshake()
 
 	var wg sync.WaitGroup
-	resultsChan := make(chan rs.Result, numRequests)
+	resultsChan := make(chan rs.Result, opts.Requests)
 
 	// Linearly ramp rate from startRate → peakRate
-	rateStep := float64(peakRate-startRate) / float64(numRequests)
+	rateStep := float64(peakRate-startRate) / float64(opts.Requests)
 
-	for i := 0; i < numRequests; i++ {
+	for i := 0; i < opts.Requests; i++ {
 		wg.Add(1)
 
 		// Calculate current rate (linearly increasing)
@@ -28,7 +28,7 @@ func RampUpAttack(url string, numRequests int, startRate int, peakRate int, meth
 		// Convert rate → sleep duration (inverse relation)
 		sleepDuration := time.Second / time.Duration(currentRate)
 
-		go makeRequest(url, method, &wg, resultsChan, timeout)
+		go makeRequest(opts.URL, opts.Method, &wg, resultsChan, opts.Timeout)
 
 		// Control pacing here
 		time.Sleep(sleepDuration)
@@ -36,12 +36,12 @@ func RampUpAttack(url string, numRequests int, startRate int, peakRate int, meth
 
 	wg.Wait()
 	close(resultsChan)
-	results := make([]rs.Result, 0, numRequests)
+	results := make([]rs.Result, 0, opts.Requests)
 	for result := range resultsChan {
 		results = append(results, result)
 	}
 
-	sc := sr.ShowResults(results, numRequests, "rampup")
+	sc := sr.ShowResults(results, opts.Requests, "rampup")
 	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }
