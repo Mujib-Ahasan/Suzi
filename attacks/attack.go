@@ -1,7 +1,9 @@
 package attacks
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -20,21 +22,31 @@ func makeHandshake() {
 // = &http.Client{}
 
 // this function sends the HTTP request and send response woth some data through chanel.
-func makeRequest(url string, method string, wg *sync.WaitGroup, resp_results chan<- rs.Result, timeout time.Duration) {
+func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result) {
 	defer wg.Done()
 	start := time.Now()
 
+	var body io.Reader
+
+	if opts.Method == "POST" && len(opts.Body) > 0 {
+		body = bytes.NewReader(opts.Body)
+
+	}
+
 	// makign a request....
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest(opts.Method, opts.URL, body)
 	if err != nil {
-		fmt.Printf("Error_1:  %v\n", err)
+		// fmt.Printf("Error_1:  %v\n", err)
 		resp_results <- rs.Result{Error: err}
 		return
 	}
 	//setting timeout.
-	client_body.Timeout = timeout * time.Second
+	client_body.Timeout = opts.Timeout * time.Second
 	// sending that request....
 	resp, err := client_body.Do(req)
+	// bodyByte, _ := io.ReadAll(resp.Body)
+	// fmt.Printf("responseeeeeeeeee: %v \n", string(bodyByte))
+	// defer resp.Body.Close()
 	elapsed := time.Since(start)
 	if err != nil {
 		fmt.Printf("Error_2:  %v\n", err)

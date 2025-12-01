@@ -9,4 +9,5 @@ type Options struct {
 	Timeout  time.Duration
 	Type     string
 	Method   string
+	Body     []byte
 }

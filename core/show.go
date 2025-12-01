@@ -19,7 +19,7 @@ func percentileCalculation(latencies []time.Duration, p float64) time.Duration {
 	return latencies[index]
 }
 
-func ShowResults(results []rs.Result, numRequests int, attack string) rs.InResult {
+func ShowResults(results []rs.Result, numRequests int, attack string, method string) rs.InResult {
 	var totalTime time.Duration
 	var avg, p50, p90, p95, p99, max time.Duration
 
@@ -54,6 +54,7 @@ func ShowResults(results []rs.Result, numRequests int, attack string) rs.InResul
 	}
 
 	return rs.InResult{
+		Method:             method,
 		Attack:             attack,
 		Number_Of_Requests: numRequests,
 		Success_Count:      successCount,

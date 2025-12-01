@@ -18,7 +18,7 @@ func RandomLoadAttack(opts Options) rs.PResultIn {
 
 	for i := 0; i < opts.Requests; i++ {
 		wg.Add(1)
-		go makeRequest(opts.URL, opts.Method, &wg, resultsChan, opts.Timeout)
+		go makeRequest(opts, &wg, resultsChan)
 		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond / time.Duration(opts.Rate))
 	}
 	wg.Wait()
@@ -27,7 +27,7 @@ func RandomLoadAttack(opts Options) rs.PResultIn {
 	for result := range resultsChan {
 		results = append(results, result)
 	}
-	sc := sr.ShowResults(results, opts.Requests, "random")
+	sc := sr.ShowResults(results, opts.Requests, "random", opts.Method)
 	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

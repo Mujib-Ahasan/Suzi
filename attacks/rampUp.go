@@ -28,7 +28,7 @@ func RampUpAttack(opts Options, startRate int, peakRate int) rs.PResultIn {
 		// Convert rate → sleep duration (inverse relation)
 		sleepDuration := time.Second / time.Duration(currentRate)
 
-		go makeRequest(opts.URL, opts.Method, &wg, resultsChan, opts.Timeout)
+		go makeRequest(opts, &wg, resultsChan)
 
 		// Control pacing here
 		time.Sleep(sleepDuration)
@@ -41,7 +41,7 @@ func RampUpAttack(opts Options, startRate int, peakRate int) rs.PResultIn {
 		results = append(results, result)
 	}
 
-	sc := sr.ShowResults(results, opts.Requests, "rampup")
+	sc := sr.ShowResults(results, opts.Requests, "rampup", opts.Method)
 	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

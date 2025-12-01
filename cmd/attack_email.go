@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Mujib-Ahasan/Suzi/attacks"
@@ -31,6 +32,8 @@ func init() {
 	attackEmailCmd.Flags().IntVar(&attackRate, "rate", 5, "Requests per second")
 	attackEmailCmd.Flags().IntVar(&attackReq, "req", 25, "Total number of requests to send")
 	attackEmailCmd.Flags().StringVar(&attackMethod, "method", "GET", "HTTP method (GET, POST, PUT, DELETE, etc.)")
+	attackEmailCmd.Flags().StringVar(&attackBody, "body", "", "Inline POST body")
+	attackEmailCmd.Flags().StringVar(&attackBodyFile, "body-file", "", "Read POST body from file")
 
 	attackEmailCmd.Flags().StringVar(&emailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
 	attackEmailCmd.Flags().StringVar(&smtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
@@ -48,6 +51,32 @@ var attackEmailCmd = &cobra.Command{
 	Short: "Send an email report",
 	Long:  "Send an email report using SMTP settings.",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		var payload []byte
+		attackMethod = strings.ToUpper(attackMethod)
+
+		if attackBody != "" && attackBodyFile != "" {
+			return fmt.Errorf("both attackBody and attackBodyFile cannot be set")
+		}
+
+		if attackMethod != "GET" && attackBody != "" {
+			payload = []byte(attackBody)
+		}
+
+		if attackMethod != "GET" && attackBodyFile != "" {
+			b, err := os.ReadFile(attackBodyFile)
+			if err != nil {
+				return fmt.Errorf("failed to read Body file: %w", err)
+			}
+
+			payload = b
+		}
+
+		if len(payload) > 0 && attackMethod != "GET" {
+			err := validateJSON(payload)
+			if err != nil {
+				return fmt.Errorf("JSON provided is not valid")
+			}
+		}
 
 		opts := attacks.Options{
 			URL:      attackURL,
@@ -56,6 +85,7 @@ var attackEmailCmd = &cobra.Command{
 			Timeout:  attackTimeout,
 			Type:     attackType,
 			Method:   attackMethod,
+			Body:     payload,
 		}
 
 		fmt.Println("Email command invoked with:")
@@ -64,6 +94,7 @@ var attackEmailCmd = &cobra.Command{
 		fmt.Println("SMTP User:", smtpUser)
 		fmt.Println("SMTP TLS:", smtpTLS)
 		fmt.Println("Retries:", smtpRetries)
+		fmt.Println("Body:", attackBody)
 
 		attackList := attacks.Run(opts, true)
 

@@ -26,7 +26,7 @@ func BasicAttack(opts Options) rs.PResultIn {
 		wg.Add(1)
 		// blocks until the next tick, spacing requests evenly.
 		<-ticker.C
-		go makeRequest(opts.URL, opts.Method, &wg, results_chan, opts.Timeout)
+		go makeRequest(opts, &wg, results_chan)
 	}
 	wg.Wait()
 	close(results_chan)
@@ -35,7 +35,7 @@ func BasicAttack(opts Options) rs.PResultIn {
 	for result := range results_chan {
 		results = append(results, result)
 	}
-	sc := sr.ShowResults(results, opts.Requests, "basic")
+	sc := sr.ShowResults(results, opts.Requests, "basic", opts.Method)
 	fmt.Printf("%+v\n", sc)
 
 	return rs.PResultIn{PRes: sc, NRes: results}

@@ -22,6 +22,7 @@ type PlotC struct {
 }
 
 type InResult struct {
+	Method             string
 	Attack             string
 	Number_Of_Requests int
 	Success_Count      int

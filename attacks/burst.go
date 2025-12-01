@@ -17,7 +17,7 @@ func BurstAttack(opts Options) rs.PResultIn {
 
 	for i := 0; i < opts.Requests; i++ {
 		wg.Add(1)
-		go makeRequest(opts.URL, opts.Method, &wg, resultsChan, opts.Timeout)
+		go makeRequest(opts, &wg, resultsChan)
 	}
 
 	wg.Wait()
@@ -27,7 +27,7 @@ func BurstAttack(opts Options) rs.PResultIn {
 	for r := range resultsChan {
 		results = append(results, r)
 	}
-	sc := sr.ShowResults(results, opts.Requests, "burst")
+	sc := sr.ShowResults(results, opts.Requests, "burst", opts.Method)
 	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }
