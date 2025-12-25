@@ -34,6 +34,7 @@ func init() {
 	attackEmailCmd.Flags().StringVar(&attackMethod, "method", "GET", "HTTP method (GET, POST, PUT, DELETE, etc.)")
 	attackEmailCmd.Flags().StringVar(&attackBody, "body", "", "Inline POST body")
 	attackEmailCmd.Flags().StringVar(&attackBodyFile, "body-file", "", "Read POST body from file")
+	attackEmailCmd.Flags().StringVar(&attackContentType, "content-type", "", "Attack content type")
 
 	attackEmailCmd.Flags().StringVar(&emailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
 	attackEmailCmd.Flags().StringVar(&smtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
@@ -53,9 +54,14 @@ var attackEmailCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var payload []byte
 		attackMethod = strings.ToUpper(attackMethod)
+		ValidateMethod(attackMethod)
 
 		if attackBody != "" && attackBodyFile != "" {
 			return fmt.Errorf("both attackBody and attackBodyFile cannot be set")
+		}
+
+		if (attackMethod == "PUT" || attackMethod == "POST") && (attackBody == "" && attackBodyFile == "") {
+			return fmt.Errorf("%s requires a Body", attackMethod)
 		}
 
 		if attackMethod != "GET" && attackBody != "" {
@@ -72,20 +78,26 @@ var attackEmailCmd = &cobra.Command{
 		}
 
 		if len(payload) > 0 && attackMethod != "GET" {
-			err := validateJSON(payload)
+			err := ValidateJSON(payload)
 			if err != nil {
 				return fmt.Errorf("JSON provided is not valid")
 			}
 		}
 
+		attackContentType, err := ValidateContentType(attackContentType)
+		if err != nil {
+			return err
+		}
+
 		opts := attacks.Options{
-			URL:      attackURL,
-			Rate:     attackRate,
-			Requests: attackReq,
-			Timeout:  attackTimeout,
-			Type:     attackType,
-			Method:   attackMethod,
-			Body:     payload,
+			URL:         attackURL,
+			Rate:        attackRate,
+			Requests:    attackReq,
+			Timeout:     attackTimeout,
+			Type:        attackType,
+			Method:      attackMethod,
+			Body:        payload,
+			ContentType: attackContentType,
 		}
 
 		fmt.Println("Email command invoked with:")
@@ -95,6 +107,7 @@ var attackEmailCmd = &cobra.Command{
 		fmt.Println("SMTP TLS:", smtpTLS)
 		fmt.Println("Retries:", smtpRetries)
 		fmt.Println("Body:", attackBody)
+		fmt.Println("content-type:", attackContentType)
 
 		attackList := attacks.Run(opts, true)
 
@@ -121,4 +134,19 @@ var attackEmailCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+func ValidateContentType(ct string) (string, error) {
+	if ct == "" {
+		return "application/json", nil
+	}
+	contentTypes := [...]string{"application/javascript ", "application/json", "application/xml"}
+
+	for _, e := range contentTypes {
+		if e == ct {
+			return e, nil
+		}
+	}
+
+	return "", fmt.Errorf("Error!!!please choose between application/javascript, application/json, application/xml")
 }

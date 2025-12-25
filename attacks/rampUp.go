@@ -24,12 +24,9 @@ func RampUpAttack(opts Options, startRate int, peakRate int) rs.PResultIn {
 
 		// Calculate current rate (linearly increasing)
 		currentRate := float64(startRate) + (rateStep * float64(i))
-
 		// Convert rate → sleep duration (inverse relation)
 		sleepDuration := time.Second / time.Duration(currentRate)
-
 		go makeRequest(opts, &wg, resultsChan)
-
 		// Control pacing here
 		time.Sleep(sleepDuration)
 	}

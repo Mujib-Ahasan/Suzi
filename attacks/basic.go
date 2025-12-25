@@ -12,7 +12,7 @@ import (
 
 func BasicAttack(opts Options) rs.PResultIn {
 	// opts.numRequests=total number of request to be fired.
-	// ratee=requests per second (RPS).
+	// rate=requests per second (RPS).
 	makeHandshake()
 	var wg sync.WaitGroup
 	//multiple channels
