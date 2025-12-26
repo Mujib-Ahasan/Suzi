@@ -28,18 +28,21 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 
 	var body io.Reader
 
-	if opts.Method == "POST" && len(opts.Body) > 0 {
+	if (opts.Method == "POST" || opts.Method == "PUT") && len(opts.Body) > 0 {
 		body = bytes.NewReader(opts.Body)
-
 	}
 
-	// makign a request....
+	// making a request....
 	req, err := http.NewRequest(opts.Method, opts.URL, body)
 	if err != nil {
-		// fmt.Printf("Error_1:  %v\n", err)
 		resp_results <- rs.Result{Error: err}
 		return
 	}
+	if (opts.Method == "POST" || opts.Method == "PUT") && len(opts.Body) > 0 {
+		req.Header.Set("Content-Type", opts.ContentType)
+		fmt.Printf("Content typeeeeeeeeeeeeeee attack.go: %s \n", opts.ContentType)
+	}
+
 	//setting timeout.
 	client_body.Timeout = opts.Timeout * time.Second
 	// sending that request....

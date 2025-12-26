@@ -24,15 +24,11 @@ func Run(opts Options, mail bool) []rs.PlotC {
 		attackAll = append(attackAll, rs.PlotC{Results: RandomLoadAttack(opts)})
 	case "basic":
 		attackAll = append(attackAll, rs.PlotC{Results: BasicAttack(opts)})
-		// pc = rs.PlotC{Results: BasicAttack(opts)}
 	case "burst":
-		// pc = rs.PlotC{Results: BurstAttack(opts)}
 		attackAll = append(attackAll, rs.PlotC{Results: BurstAttack(opts)})
 	case "rampup":
-		// pc = rs.PlotC{Results: RampUpAttack(opts, 1, 15)}
 		attackAll = append(attackAll, rs.PlotC{Results: RampUpAttack(opts, 1, 15)})
 	case "random":
-		// pc = rs.PlotC{Results: RandomLoadAttack(opts)}
 		attackAll = append(attackAll, rs.PlotC{Results: RandomLoadAttack(opts)})
 	default:
 		return []rs.PlotC{

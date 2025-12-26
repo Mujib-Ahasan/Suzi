@@ -13,14 +13,15 @@ import (
 )
 
 var (
-	attackURL      string
-	attackRate     int
-	attackReq      int
-	attackTimeout  time.Duration
-	attackType     string
-	attackMethod   string
-	attackBody     string
-	attackBodyFile string
+	attackURL         string
+	attackRate        int
+	attackReq         int
+	attackTimeout     time.Duration
+	attackType        string
+	attackMethod      string
+	attackBody        string
+	attackBodyFile    string
+	attackContentType string
 )
 
 var attackRunCmd = &cobra.Command{
@@ -40,8 +41,17 @@ Example:
 		var payload []byte
 		attackMethod = strings.ToUpper(attackMethod)
 
+		err := ValidateMethod(attackMethod)
+		if err != nil {
+			return err
+		}
+
 		if attackBody != "" && attackBodyFile != "" {
 			return fmt.Errorf("both attackBody and attackBodyFile cannot be set")
+		}
+
+		if (attackMethod == "PUT" || attackMethod == "POST") && (attackBody == "" && attackBodyFile == "") {
+			return fmt.Errorf("%s requires a Body", attackMethod)
 		}
 
 		if attackMethod != "GET" && attackBody != "" {
@@ -53,28 +63,32 @@ Example:
 			if err != nil {
 				return fmt.Errorf("failed to read Body file: %w", err)
 			}
-
 			payload = b
-
 		}
 		if len(payload) > 0 && attackMethod != "GET" {
-			err := validateJSON(payload)
-			fmt.Printf("bady: %s", string(payload))
+			err := ValidateJSON(payload)
+			fmt.Printf("body: %s ", string(payload))
 			if err != nil {
 				return fmt.Errorf("JSON provided is not valid")
 			}
 		}
 
-		opts := attacks.Options{
-			URL:      attackURL,
-			Rate:     attackRate,
-			Requests: attackReq,
-			Timeout:  attackTimeout,
-			Type:     attackType,
-			Method:   attackMethod,
-			Body:     payload,
+		attackContentType, err := ValidateContentType(attackContentType)
+		if err != nil {
+			return err
 		}
-		fmt.Println("Starting attack:")
+
+		opts := attacks.Options{
+			URL:         attackURL,
+			Rate:        attackRate,
+			Requests:    attackReq,
+			Timeout:     attackTimeout,
+			Type:        attackType,
+			Method:      attackMethod,
+			Body:        payload,
+			ContentType: attackContentType,
+		}
+		fmt.Printf("Starting attack: \n")
 		fmt.Printf("  URL: %s\n", opts.URL)
 		fmt.Printf("  Rate: %d RPS\n", opts.Rate)
 		fmt.Printf("  Requests: %d\n", opts.Requests)
@@ -82,6 +96,7 @@ Example:
 		fmt.Printf("  Attack Type: %s\n", opts.Type)
 		fmt.Printf("  Method: %s\n", opts.Method)
 		fmt.Printf(" Body: %s \n", opts.Body)
+		fmt.Printf("content type: %s \n", opts.ContentType)
 
 		attackList := attacks.Run(opts, false)
 
@@ -104,6 +119,7 @@ func init() {
 	attackRunCmd.Flags().StringVar(&attackMethod, "method", "GET", "HTTP method (GET, POST, PUT, DELETE, etc.)")
 	attackRunCmd.Flags().StringVar(&attackBody, "body", "", "Inline POST body")
 	attackRunCmd.Flags().StringVar(&attackBodyFile, "body-file", "", "Read POST body from file")
+	attackRunCmd.Flags().StringVar(&attackContentType, "content-type", "", "Attack content type")
 
 	attackRunCmd.MarkFlagRequired("url")
 
@@ -117,7 +133,17 @@ func init() {
 	})
 }
 
-func validateJSON(data []byte) error {
+func ValidateJSON(data []byte) error {
 	var js json.RawMessage
 	return json.Unmarshal(data, &js)
+}
+
+func ValidateMethod(method string) error {
+	methods := [...]string{"POST", "GET", "PUT", "DELETE", "PATCH"}
+	for _, e := range methods {
+		if e == method {
+			return nil
+		}
+	}
+	return fmt.Errorf("Error!! Invalid HTTP Method! Valid: POST, GET, PUT, DELETE, PATCH")
 }
