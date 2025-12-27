@@ -11,4 +11,5 @@ type Options struct {
 	Method      string
 	Body        []byte
 	ContentType string
+	Headers     map[string]string
 }

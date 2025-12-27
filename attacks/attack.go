@@ -26,7 +26,7 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 	defer wg.Done()
 	start := time.Now()
 
-	body := opts.ValidateBody()
+	body := opts.ConvertBody()
 
 	// making a request....
 	req, err := http.NewRequest(opts.Method, opts.URL, body)
@@ -36,7 +36,9 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 	}
 	if (opts.Method == "POST" || opts.Method == "PUT" || opts.Method == "PATCH") && len(opts.Body) > 0 {
 		req.Header.Set("Content-Type", opts.ContentType)
-		fmt.Printf("Content typeeeeeeeeeeeeeee attack.go: %s \n", opts.ContentType)
+	}
+	for key, value := range opts.Headers {
+		req.Header.Set(key, value)
 	}
 
 	//setting timeout.
@@ -54,7 +56,7 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 	resp_results <- rs.Result{Status: resp.Status, Elapsed: elapsed}
 }
 
-func (opts Options) ValidateBody() io.Reader {
+func (opts Options) ConvertBody() io.Reader {
 	var body io.Reader
 
 	if (opts.Method == "POST" || opts.Method == "PUT" || opts.Method == "PATCH") && len(opts.Body) > 0 {
