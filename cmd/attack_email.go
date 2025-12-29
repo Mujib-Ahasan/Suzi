@@ -12,27 +12,39 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	emailTo      string
+	smtpHost     string
+	smtpPort     int
+	smtpUser     string
+	smtpPass     string
+	emailFrom    string
+	smtpTLS      bool
+	smtpRetries  int
+	smtpTimeoutS int
+)
+
 func init() {
 	// Register this subcommand under rootCmd
 	attackCmd.AddCommand(attackEmailCmd)
 	// Flags for the email command
-	attackEmailCmd.Flags().StringVar(&currentAttack.AttackURL, "url", "", "Target URL for the attack (required)")
-	attackEmailCmd.Flags().IntVar(&currentAttack.AttackRate, "rate", 5, "Requests per second")
-	attackEmailCmd.Flags().IntVar(&currentAttack.AttackReq, "req", 25, "Total number of requests to send")
-	attackEmailCmd.Flags().StringVar(&currentAttack.AttackMethod, "method", "GET", "HTTP method (GET, POST, PUT, DELETE, etc.)")
-	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
-	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
-	attackEmailCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
+	attackEmailCmd.Flags().StringVar(&attackURL, "url", "", "Target URL for the attack (required)")
+	attackEmailCmd.Flags().IntVar(&attackRate, "rate", 5, "Requests per second")
+	attackEmailCmd.Flags().IntVar(&attackReq, "req", 25, "Total number of requests to send")
+	attackEmailCmd.Flags().StringVar(&attackMethod, "method", "GET", "HTTP method (GET, POST, PUT, DELETE, etc.)")
+	attackEmailCmd.Flags().StringVar(&attackBody, "body", "", "Inline POST body")
+	attackEmailCmd.Flags().StringVar(&attackBodyFile, "body-file", "", "Read POST body from file")
+	attackEmailCmd.Flags().StringVar(&attackContentType, "content-type", "", "Attack content type")
 
-	attackEmailCmd.Flags().StringVar(&currentAttack.EmailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
-	attackEmailCmd.Flags().StringVar(&currentAttack.SmtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
-	attackEmailCmd.Flags().IntVar(&currentAttack.SmtpPort, "smtpPort", 1025, "SMTP port (e.g. 587 or 465)")
-	attackEmailCmd.Flags().StringVar(&currentAttack.SmtpUser, "smtp-user", os.Getenv("SMTP_USER"), "SMTP username (default from env SMTP_USER)")
-	attackEmailCmd.Flags().StringVar(&currentAttack.SmtpPass, "smtp-pass", os.Getenv("SMTP_PASS"), "SMTP password/app password (default from env SMTP_PASS)")
-	attackEmailCmd.Flags().StringVar(&currentAttack.EmailFrom, "emailFrom", "Suzi <noreply@gmail.com>", "From header")
-	attackEmailCmd.Flags().BoolVar(&currentAttack.SmtpTLS, "smtpTLS", false, "Use TLS (SMTPS/STARTTLS)")
-	attackEmailCmd.Flags().IntVar(&currentAttack.SmtpRetries, "smtp-retries", 3, "Email send retries")
-	attackEmailCmd.Flags().IntVar(&currentAttack.SmtpTimeoutS, "smtp-timeout", 10, "Email send timeout in seconds")
+	attackEmailCmd.Flags().StringVar(&emailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
+	attackEmailCmd.Flags().StringVar(&smtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
+	attackEmailCmd.Flags().IntVar(&smtpPort, "smtpPort", 1025, "SMTP port (e.g. 587 or 465)")
+	attackEmailCmd.Flags().StringVar(&smtpUser, "smtp-user", os.Getenv("SMTP_USER"), "SMTP username (default from env SMTP_USER)")
+	attackEmailCmd.Flags().StringVar(&smtpPass, "smtp-pass", os.Getenv("SMTP_PASS"), "SMTP password/app password (default from env SMTP_PASS)")
+	attackEmailCmd.Flags().StringVar(&emailFrom, "emailFrom", "Suzi <noreply@gmail.com>", "From header")
+	attackEmailCmd.Flags().BoolVar(&smtpTLS, "smtpTLS", false, "Use TLS (SMTPS/STARTTLS)")
+	attackEmailCmd.Flags().IntVar(&smtpRetries, "smtp-retries", 3, "Email send retries")
+	attackEmailCmd.Flags().IntVar(&smtpTimeoutS, "smtp-timeout", 10, "Email send timeout in seconds")
 }
 
 var attackEmailCmd = &cobra.Command{
@@ -40,46 +52,61 @@ var attackEmailCmd = &cobra.Command{
 	Short: "Send an email report",
 	Long:  "Send an email report using SMTP settings.",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		currentAttack.AttackMethod = strings.ToUpper(currentAttack.AttackMethod)
+		var payload []byte
+		attackMethod = strings.ToUpper(attackMethod)
+		ValidateMethod(attackMethod)
 
-		err := currentAttack.ValidateMethod()
-		if err != nil {
-			return err
+		if attackBody != "" && attackBodyFile != "" {
+			return fmt.Errorf("both attackBody and attackBodyFile cannot be set")
 		}
 
-		err = currentAttack.ValidateBeforeAttack()
-		if err != nil {
-			return err
+		if (attackMethod == "PUT" || attackMethod == "POST") && (attackBody == "" && attackBodyFile == "") {
+			return fmt.Errorf("%s requires a Body", attackMethod)
 		}
 
-		payload, err := currentAttack.ValidateBody()
-		if err != nil {
-			return err
+		if attackMethod != "GET" && attackBody != "" {
+			payload = []byte(attackBody)
 		}
 
-		attackContentType, err := ValidateContentType(currentAttack.AttackContentType)
+		if attackMethod != "GET" && attackBodyFile != "" {
+			b, err := os.ReadFile(attackBodyFile)
+			if err != nil {
+				return fmt.Errorf("failed to read Body file: %w", err)
+			}
+
+			payload = b
+		}
+
+		if len(payload) > 0 && attackMethod != "GET" {
+			err := ValidateJSON(payload)
+			if err != nil {
+				return fmt.Errorf("JSON provided is not valid")
+			}
+		}
+
+		attackContentType, err := ValidateContentType(attackContentType)
 		if err != nil {
 			return err
 		}
 
 		opts := attacks.Options{
-			URL:         currentAttack.AttackURL,
-			Rate:        currentAttack.AttackRate,
-			Requests:    currentAttack.AttackReq,
-			Timeout:     currentAttack.AttackTimeout,
-			Type:        currentAttack.AttackType,
-			Method:      currentAttack.AttackMethod,
+			URL:         attackURL,
+			Rate:        attackRate,
+			Requests:    attackReq,
+			Timeout:     attackTimeout,
+			Type:        attackType,
+			Method:      attackMethod,
 			Body:        payload,
 			ContentType: attackContentType,
 		}
 
 		fmt.Println("Email command invoked with:")
-		fmt.Println("SMTP Host:", currentAttack.SmtpHost)
-		fmt.Println("SMTP Port:", currentAttack.SmtpPort)
-		fmt.Println("SMTP User:", currentAttack.SmtpUser)
-		fmt.Println("SMTP TLS:", currentAttack.SmtpTLS)
-		fmt.Println("Retries:", currentAttack.SmtpRetries)
-		fmt.Println("Body:", currentAttack.AttackBody)
+		fmt.Println("SMTP Host:", smtpHost)
+		fmt.Println("SMTP Port:", smtpPort)
+		fmt.Println("SMTP User:", smtpUser)
+		fmt.Println("SMTP TLS:", smtpTLS)
+		fmt.Println("Retries:", smtpRetries)
+		fmt.Println("Body:", attackBody)
 		fmt.Println("content-type:", attackContentType)
 
 		attackList := attacks.Run(opts, true)
@@ -89,19 +116,19 @@ var attackEmailCmd = &cobra.Command{
 		}
 
 		cfg := ml.Config{
-			Host:        currentAttack.SmtpHost,
-			Port:        currentAttack.SmtpPort,
-			Username:    currentAttack.SmtpUser,
-			Password:    currentAttack.SmtpPass,
-			From:        currentAttack.EmailFrom,
-			UseTLS:      currentAttack.SmtpTLS,
+			Host:        smtpHost,
+			Port:        smtpPort,
+			Username:    smtpUser,
+			Password:    smtpPass,
+			From:        emailFrom,
+			UseTLS:      smtpTLS,
 			DialTimeout: 5 * time.Second,
-			SendTimeout: time.Duration(currentAttack.SmtpTimeoutS) * time.Second,
-			Retries:     currentAttack.SmtpRetries,
+			SendTimeout: time.Duration(smtpTimeoutS) * time.Second,
+			Retries:     smtpRetries,
 		}
 
-		reportHTML := ml.BuildEmailReportHTML(attackList, opts.URL)
-		if err := cfg.SendMail(currentAttack.EmailTo, reportHTML); err != nil {
+		reportHTML := ml.BuildEmailReportHTML(attackList, attackURL)
+		if err := cfg.SendMail(emailTo, reportHTML); err != nil {
 			return fmt.Errorf("error: %w", err)
 		}
 
