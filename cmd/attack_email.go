@@ -23,6 +23,7 @@ func init() {
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
+	attackEmailCmd.Flags().StringVar(&currentAttack.Header, "Header", "", "Headers for the request")
 
 	attackEmailCmd.Flags().StringVar(&currentAttack.EmailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
 	attackEmailCmd.Flags().StringVar(&currentAttack.SmtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
@@ -61,6 +62,7 @@ var attackEmailCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		header := currentAttack.ValidateHeader()
 
 		opts := attacks.Options{
 			URL:         currentAttack.AttackURL,
@@ -71,6 +73,7 @@ var attackEmailCmd = &cobra.Command{
 			Method:      currentAttack.AttackMethod,
 			Body:        payload,
 			ContentType: attackContentType,
+			Headers:     header,
 		}
 
 		fmt.Println("Email command invoked with:")
@@ -122,4 +125,27 @@ func ValidateContentType(ct string) (string, error) {
 	}
 
 	return "", fmt.Errorf("Error!!!please choose between application/javascript, application/json, application/xml")
+}
+
+func (cAttack Attack) ValidateHeader() map[string]string {
+	headers := make(map[string]string)
+	if strings.TrimSpace(cAttack.Header) == "" {
+		return headers
+	}
+	pairs := strings.Split(cAttack.Header, ",")
+
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, "=", 2)
+
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+
+			if key != "" {
+				headers[key] = value
+			}
+		}
+	}
+
+	return headers
 }
