@@ -23,6 +23,7 @@ func init() {
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
+	attackRunCmd.Flags().StringVar(&currentAttack.Header, "Header", "", "Headers for the request")
 
 	attackEmailCmd.Flags().StringVar(&currentAttack.EmailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
 	attackEmailCmd.Flags().StringVar(&currentAttack.SmtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")
@@ -62,6 +63,8 @@ var attackEmailCmd = &cobra.Command{
 			return err
 		}
 
+		header := currentAttack.ValidateHeader()
+
 		opts := attacks.Options{
 			URL:         currentAttack.AttackURL,
 			Rate:        currentAttack.AttackRate,
@@ -71,6 +74,7 @@ var attackEmailCmd = &cobra.Command{
 			Method:      currentAttack.AttackMethod,
 			Body:        payload,
 			ContentType: attackContentType,
+			Headers:     header,
 		}
 
 		fmt.Println("Email command invoked with:")

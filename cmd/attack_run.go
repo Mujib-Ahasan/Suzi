@@ -31,6 +31,7 @@ type Attack struct {
 	SmtpTLS           bool
 	SmtpRetries       int
 	SmtpTimeoutS      int
+	Header            string
 }
 
 var currentAttack Attack
@@ -67,6 +68,8 @@ Example:
 			return err
 		}
 
+		header := currentAttack.ValidateHeader()
+
 		attackContentType, err := ValidateContentType(currentAttack.AttackContentType)
 		if err != nil {
 			return err
@@ -81,6 +84,7 @@ Example:
 			Method:      currentAttack.AttackMethod,
 			Body:        payload,
 			ContentType: attackContentType,
+			Headers:     header,
 		}
 		fmt.Printf("Starting attack: \n")
 		fmt.Printf("  URL: %s\n", opts.URL)
@@ -117,6 +121,7 @@ func init() {
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
+	attackRunCmd.Flags().StringVar(&currentAttack.Header, "Header", "", "Headers for the request")
 
 	attackRunCmd.MarkFlagRequired("url")
 
@@ -147,19 +152,19 @@ func (cAttack Attack) ValidateMethod() error {
 
 func (cAttack Attack) ValidateBody() ([]byte, error) {
 	var payload []byte
-	if currentAttack.AttackMethod != "GET" && currentAttack.AttackBody != "" {
-		payload = []byte(currentAttack.AttackBody)
+	if cAttack.AttackMethod != "GET" && cAttack.AttackBody != "" {
+		payload = []byte(cAttack.AttackBody)
 	}
 
-	if currentAttack.AttackMethod != "GET" && currentAttack.AttackBodyFile != "" {
-		b, err := os.ReadFile(currentAttack.AttackBodyFile)
+	if cAttack.AttackMethod != "GET" && cAttack.AttackBodyFile != "" {
+		b, err := os.ReadFile(cAttack.AttackBodyFile)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read Body file: %w", err)
 		}
 		payload = b
 	}
-	if len(payload) > 0 && currentAttack.AttackMethod != "GET" {
-		err := currentAttack.ValidateJSON(payload)
+	if len(payload) > 0 && cAttack.AttackMethod != "GET" {
+		err := cAttack.ValidateJSON(payload)
 		fmt.Printf("body: %s ", string(payload))
 		if err != nil {
 			return nil, fmt.Errorf("JSON provided is not valid")
@@ -171,14 +176,37 @@ func (cAttack Attack) ValidateBody() ([]byte, error) {
 
 func (cAttack Attack) ValidateBeforeAttack() error {
 
-	if currentAttack.AttackBody != "" && currentAttack.AttackBodyFile != "" {
+	if cAttack.AttackBody != "" && cAttack.AttackBodyFile != "" {
 		return fmt.Errorf("both attackBody and attackBodyFile cannot be set")
 	}
 
-	if (currentAttack.AttackMethod == "PUT" || currentAttack.AttackMethod == "POST" || currentAttack.AttackMethod == "PATCH") && (currentAttack.AttackBody == "" && currentAttack.AttackBodyFile == "") {
-		return fmt.Errorf("%s requires a Body", currentAttack.AttackMethod)
+	if (cAttack.AttackMethod == "PUT" || cAttack.AttackMethod == "POST" || cAttack.AttackMethod == "PATCH") && (cAttack.AttackBody == "" && cAttack.AttackBodyFile == "") {
+		return fmt.Errorf("%s requires a Body", cAttack.AttackMethod)
 	}
 
 	return nil
 
+}
+
+func (cAttack Attack) ValidateHeader() map[string]string {
+	headers := make(map[string]string)
+	if strings.TrimSpace(cAttack.Header) == "" {
+		return headers
+	}
+	pairs := strings.Split(cAttack.Header, ",")
+
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, "=", 2)
+
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
+
+			if key != "" {
+				headers[key] = value
+			}
+		}
+	}
+
+	return headers
 }
