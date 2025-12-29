@@ -23,7 +23,7 @@ func init() {
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackEmailCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
-	attackEmailCmd.Flags().StringVar(&currentAttack.Header, "Header", "", "Headers for the request")
+	attackEmailCmd.Flags().StringVar(&currentAttack.Header, "header", "", "Headers for the request")
 
 	attackEmailCmd.Flags().StringVar(&currentAttack.EmailTo, "emailTo", "you@local.test", "Comma-separated list of recipients")
 	attackEmailCmd.Flags().StringVar(&currentAttack.SmtpHost, "smtpHost", "localhost", "SMTP host (e.g. smtp.gmail.com)")

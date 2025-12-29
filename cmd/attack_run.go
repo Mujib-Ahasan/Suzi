@@ -122,7 +122,7 @@ func init() {
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
-	attackRunCmd.Flags().StringVar(&currentAttack.Header, "Header", "", "Headers for the request")
+	attackRunCmd.Flags().StringVar(&currentAttack.Header, "header", "", "Headers for the request")
 
 	attackRunCmd.MarkFlagRequired("url")
 
