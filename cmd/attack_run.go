@@ -12,28 +12,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type Attack struct {
-	AttackURL         string
-	AttackRate        int
-	AttackReq         int
-	AttackTimeout     time.Duration
-	AttackType        string
-	AttackMethod      string
-	AttackBody        string
-	AttackBodyFile    string
-	AttackContentType string
-	EmailTo           string
-	SmtpHost          string
-	SmtpPort          int
-	SmtpUser          string
-	SmtpPass          string
-	EmailFrom         string
-	SmtpTLS           bool
-	SmtpRetries       int
-	SmtpTimeoutS      int
-	Header            string
-}
-
 var currentAttack Attack
 
 var attackRunCmd = &cobra.Command{
@@ -97,8 +75,6 @@ Example:
 		fmt.Printf("content type: %s \n", opts.ContentType)
 
 		attackList := attacks.Run(opts, false)
-
-		fmt.Printf("currentAttack: %+v \n", currentAttack)
 
 		if err := attackList[0].Results.Err; err != nil {
 			return fmt.Errorf("error: %v ", err)
