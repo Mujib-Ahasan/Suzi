@@ -97,7 +97,6 @@ func init() {
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
-	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
 	attackRunCmd.Flags().StringVar(&currentAttack.Header, "header", "", "Headers for the request")
 
 	attackRunCmd.MarkFlagRequired("url")

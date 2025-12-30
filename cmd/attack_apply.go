@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/Mujib-Ahasan/Suzi/attacks"
+	"github.com/Mujib-Ahasan/Suzi/common"
+	ml "github.com/Mujib-Ahasan/Suzi/mail"
 
 	"github.com/spf13/cobra"
 	"go.yaml.in/yaml/v2"
@@ -65,9 +67,33 @@ as the primary configuration source. CLI flags override YAML values.`,
 			Body:        payload,
 			ContentType: attackContentType,
 		}
-		attackList := attacks.Run(opts, false)
+		var attackList []common.PlotC
+		var mailCfg ml.Config
+		if cfg.Email == nil {
+			attackList = attacks.Run(opts, false)
+		} else {
+			attackList = attacks.Run(opts, true)
+			mailCfg = ml.Config{
+				Host:        cfg.Email.SMTP.Host,
+				Port:        cfg.Email.SMTP.Port,
+				Username:    cfg.Email.SMTP.User,
+				Password:    cfg.Email.SMTP.Pass,
+				From:        cfg.Email.From,
+				UseTLS:      cfg.Email.SMTP.TLS,
+				DialTimeout: 5 * time.Second,
+				SendTimeout: time.Duration(cfg.Email.SMTP.TimeoutSeconds) * time.Second,
+				Retries:     cfg.Email.SMTP.Retries,
+			}
+		}
 		if err := attackList[0].Results.Err; err != nil {
 			return fmt.Errorf("error: %v ", err)
+		}
+
+		if cfg.Email != nil {
+			reportHTML := ml.BuildEmailReportHTML(attackList, opts.URL)
+			if err := mailCfg.SendMail(cfg.Email.To, reportHTML); err != nil {
+				return fmt.Errorf("error: %w", err)
+			}
 		}
 		return nil
 	},
@@ -130,10 +156,6 @@ func (cAttack Attack) ValidateYaml() error {
 	if (cAttack.AttackBody != "" || cAttack.AttackBodyFile != "") && method == "GET" {
 		return fmt.Errorf("request body is not allowed for GET requests")
 	}
-
-	// if (cAttack.AttackBody != "" || cAttack.AttackBodyFile != "") && cAttack.AttackContentType == "" {
-	// 	return fmt.Errorf("content-type is required when body or body_file is set")
-	// }
 
 	if cAttack.Email != nil {
 		if err := cAttack.Email.Validate(); err != nil {
