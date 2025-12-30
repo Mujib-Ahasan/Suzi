@@ -31,6 +31,7 @@ type Attack struct {
 	SmtpTLS           bool
 	SmtpRetries       int
 	SmtpTimeoutS      int
+	Header            string
 }
 
 var currentAttack Attack
@@ -72,6 +73,8 @@ Example:
 			return err
 		}
 
+		header := currentAttack.ValidateHeader()
+
 		opts := attacks.Options{
 			URL:         currentAttack.AttackURL,
 			Rate:        currentAttack.AttackRate,
@@ -81,6 +84,7 @@ Example:
 			Method:      currentAttack.AttackMethod,
 			Body:        payload,
 			ContentType: attackContentType,
+			Headers:     header,
 		}
 		fmt.Printf("Starting attack: \n")
 		fmt.Printf("  URL: %s\n", opts.URL)
@@ -117,6 +121,8 @@ func init() {
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
+	attackRunCmd.Flags().StringVar(&currentAttack.AttackContentType, "content-type", "", "Attack content type")
+	attackRunCmd.Flags().StringVar(&currentAttack.Header, "header", "", "Headers for the request")
 
 	attackRunCmd.MarkFlagRequired("url")
 
