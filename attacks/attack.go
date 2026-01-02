@@ -2,8 +2,8 @@ package attacks
 
 import (
 	"bytes"
-	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -15,7 +15,7 @@ import (
 var client_body *http.Client
 
 func makeHandshake() {
-	fmt.Println("New connection made!!!")
+	slog.Debug("New connection made... \n")
 	client_body = &http.Client{}
 }
 
@@ -47,7 +47,7 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 	resp, err := client_body.Do(req)
 	elapsed := time.Since(start)
 	if err != nil {
-		fmt.Printf("Error_2:  %v\n", err)
+		// fmt.Printf("Error_2:  %v\n", err)
 		resp_results <- rs.Result{Error: err}
 		return
 	}

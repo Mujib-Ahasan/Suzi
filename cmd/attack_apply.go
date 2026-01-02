@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -47,7 +48,7 @@ as the primary configuration source. CLI flags override YAML values.`,
 		if err != nil {
 			return err
 		}
-		payload, err := currentAttack.ValidateBody()
+		payload, err := cfg.ValidateBody()
 		if err != nil {
 			return err
 		}
@@ -56,17 +57,28 @@ as the primary configuration source. CLI flags override YAML values.`,
 		if err != nil {
 			return err
 		}
+		emailFlag := false
+
+		if cfg.Email != nil {
+			emailFlag = true
+		}
 
 		opts := attacks.Options{
-			URL:         cfg.AttackURL,
-			Rate:        cfg.AttackRate,
-			Requests:    cfg.AttackReq,
-			Timeout:     cfg.AttackTimeout,
-			Type:        cfg.AttackType,
-			Method:      cfg.AttackMethod,
-			Body:        payload,
-			ContentType: attackContentType,
+			URL:          cfg.AttackURL,
+			Rate:         cfg.AttackRate,
+			Requests:     cfg.AttackReq,
+			Timeout:      cfg.AttackTimeout,
+			Type:         cfg.AttackType,
+			Method:       cfg.AttackMethod,
+			Body:         payload,
+			ContentType:  attackContentType,
+			EmailEnabled: emailFlag,
 		}
+
+		if verbose {
+			printVerboseHeader(opts)
+		}
+		slog.Debug("Preparing for attack ")
 		var attackList []common.PlotC
 		var mailCfg ml.Config
 		if cfg.Email == nil {
@@ -85,6 +97,18 @@ as the primary configuration source. CLI flags override YAML values.`,
 				Retries:     cfg.Email.SMTP.Retries,
 			}
 		}
+
+		switch {
+		case quiet:
+			printQuiet(attackList)
+
+		case verbose:
+			printVerbose(attackList)
+
+		default:
+			printDefault(attackList)
+		}
+
 		if err := attackList[0].Results.Err; err != nil {
 			return fmt.Errorf("error: %v ", err)
 		}
@@ -106,6 +130,7 @@ func init() {
 }
 
 func loadAttackFromYAML(path string) (*Attack, error) {
+	slog.Debug("Parsing YAML file")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
@@ -120,6 +145,7 @@ func loadAttackFromYAML(path string) (*Attack, error) {
 }
 
 func (cAttack Attack) ValidateYaml() error {
+	slog.Debug("Validating YAML file")
 
 	if strings.TrimSpace(cAttack.AttackURL) == "" {
 		return fmt.Errorf("url is required")
@@ -167,6 +193,7 @@ func (cAttack Attack) ValidateYaml() error {
 }
 
 func (e *EmailConfig) Validate() error {
+	slog.Debug("Validating Email details \n")
 	if strings.TrimSpace(e.To) == "" {
 		return fmt.Errorf("email.to is required")
 	}

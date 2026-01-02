@@ -2,14 +2,13 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-var (
-	verbose bool
-)
+var debug bool
 
 // rootCmd is the base command for the CLI.
 var rootCmd = &cobra.Command{
@@ -19,6 +18,10 @@ var rootCmd = &cobra.Command{
 
 It supports multiple attack strategies (constant, ramp, burst, custom patterns),
 result summarization, and integrations (mail, dashboards).`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		setupLogger()
+		return nil
+	},
 
 	// Root command should NOT run any attack directly.
 	// It should only show help if called without subcommands.
@@ -36,6 +39,23 @@ func Execute() {
 }
 
 func init() {
-	// Global flags available to all subcommands
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose logging")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug logging")
+}
+
+func DebugEnabled() bool {
+	return debug
+}
+
+func setupLogger() {
+	level := slog.LevelInfo
+
+	if DebugEnabled() {
+		level = slog.LevelDebug
+	}
+
+	handler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: level,
+	})
+
+	slog.SetDefault(slog.New(handler))
 }

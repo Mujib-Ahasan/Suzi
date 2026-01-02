@@ -2,6 +2,7 @@ package attacks
 
 import (
 	"fmt"
+	"log/slog"
 
 	rs "github.com/Mujib-Ahasan/Suzi/common"
 )
@@ -9,27 +10,33 @@ import (
 func Run(opts Options, mail bool) []rs.PlotC {
 	var attackAll []rs.PlotC
 	if mail {
-		attackAll = append(attackAll, rs.PlotC{Results: BasicAttack(opts)})
-		attackAll = append(attackAll, rs.PlotC{Results: BurstAttack(opts)})
-		attackAll = append(attackAll, rs.PlotC{Results: RampUpAttack(opts, 1, 15)})
-		attackAll = append(attackAll, rs.PlotC{Results: RandomLoadAttack(opts)})
+		slog.Debug("All Attack at once! Starting... \n")
+		attackAll = append(attackAll, rs.PlotC{Attack: "basic", Results: BasicAttack(opts)})
+		attackAll = append(attackAll, rs.PlotC{Attack: "burst", Results: BurstAttack(opts)})
+		attackAll = append(attackAll, rs.PlotC{Attack: "rampup", Results: RampUpAttack(opts, 1, 15)})
+		attackAll = append(attackAll, rs.PlotC{Attack: "random", Results: RandomLoadAttack(opts)})
 		return attackAll
 	}
 
 	switch opts.Type {
 	case "all":
-		attackAll = append(attackAll, rs.PlotC{Results: BasicAttack(opts)})
-		attackAll = append(attackAll, rs.PlotC{Results: BurstAttack(opts)})
-		attackAll = append(attackAll, rs.PlotC{Results: RampUpAttack(opts, 1, 15)})
-		attackAll = append(attackAll, rs.PlotC{Results: RandomLoadAttack(opts)})
+		slog.Debug("All Attack at once! Starting... \n")
+		attackAll = append(attackAll, rs.PlotC{Attack: "basic", Results: BasicAttack(opts)})
+		attackAll = append(attackAll, rs.PlotC{Attack: "burst", Results: BurstAttack(opts)})
+		attackAll = append(attackAll, rs.PlotC{Attack: "rampup", Results: RampUpAttack(opts, 1, 15)})
+		attackAll = append(attackAll, rs.PlotC{Attack: "random", Results: RandomLoadAttack(opts)})
 	case "basic":
-		attackAll = append(attackAll, rs.PlotC{Results: BasicAttack(opts)})
+		slog.Debug("Basic Attack! Starting... \n")
+		attackAll = append(attackAll, rs.PlotC{Attack: "basic", Results: BasicAttack(opts)})
 	case "burst":
-		attackAll = append(attackAll, rs.PlotC{Results: BurstAttack(opts)})
+		slog.Debug("Burst Attack! Starting... \n")
+		attackAll = append(attackAll, rs.PlotC{Attack: "burst", Results: BurstAttack(opts)})
 	case "rampup":
-		attackAll = append(attackAll, rs.PlotC{Results: RampUpAttack(opts, 1, 15)})
+		slog.Debug("Rampup Attack! Starting... \n")
+		attackAll = append(attackAll, rs.PlotC{Attack: "rampup", Results: RampUpAttack(opts, 1, 15)})
 	case "random":
-		attackAll = append(attackAll, rs.PlotC{Results: RandomLoadAttack(opts)})
+		slog.Debug("Random Attack! Starting... \n")
+		attackAll = append(attackAll, rs.PlotC{Attack: "random", Results: RandomLoadAttack(opts)})
 	default:
 		return []rs.PlotC{
 			{Results: rs.PResultIn{

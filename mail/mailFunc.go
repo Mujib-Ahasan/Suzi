@@ -26,7 +26,7 @@ func (cfg *Config) SendMail(emailTo string, reportHTML string) error {
 	if err := m.Send(ctx, recipients, "Suzi Load Test Report", html, text); err != nil {
 		return fmt.Errorf("email send failed: %w ", err)
 	} else {
-		fmt.Println("email sent successfully!!!")
+		fmt.Println("Email sent successfully")
 	}
 
 	return nil

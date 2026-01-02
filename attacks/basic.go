@@ -1,7 +1,6 @@
 package attacks
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -34,7 +33,5 @@ func BasicAttack(opts Options) rs.PResultIn {
 		results = append(results, result)
 	}
 	sc := sr.ShowResults(results, opts.Requests, "basic", opts.Method)
-	fmt.Printf("%+v\n", sc)
-
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

@@ -1,7 +1,6 @@
 package attacks
 
 import (
-	"fmt"
 	"math/rand"
 	"sync"
 	"time"
@@ -28,6 +27,5 @@ func RandomLoadAttack(opts Options) rs.PResultIn {
 		results = append(results, result)
 	}
 	sc := sr.ShowResults(results, opts.Requests, "random", opts.Method)
-	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

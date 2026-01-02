@@ -1,7 +1,6 @@
 package attacks
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -39,6 +38,5 @@ func RampUpAttack(opts Options, startRate int, peakRate int) rs.PResultIn {
 	}
 
 	sc := sr.ShowResults(results, opts.Requests, "rampup", opts.Method)
-	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

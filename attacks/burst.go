@@ -1,7 +1,6 @@
 package attacks
 
 import (
-	"fmt"
 	"sync"
 
 	// pr "github.com/Mujib-Ahasan/Suzi/cmd"
@@ -28,6 +27,5 @@ func BurstAttack(opts Options) rs.PResultIn {
 		results = append(results, r)
 	}
 	sc := sr.ShowResults(results, opts.Requests, "burst", opts.Method)
-	fmt.Printf("%+v\n", sc)
 	return rs.PResultIn{PRes: sc, NRes: results}
 }
