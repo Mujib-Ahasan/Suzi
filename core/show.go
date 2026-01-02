@@ -1,23 +1,12 @@
 package core
 
 import (
-	"fmt"
+	"log/slog"
 	"sort"
 	"time"
 
 	rs "github.com/Mujib-Ahasan/Suzi/common"
 )
-
-func percentileCalculation(latencies []time.Duration, p float64) time.Duration {
-	if len(latencies) == 0 {
-		return 0
-	}
-	index := int((p / 100.0) * float64(len(latencies)))
-	if index >= len(latencies) {
-		index = len(latencies) - 1
-	}
-	return latencies[index]
-}
 
 func ShowResults(results []rs.Result, numRequests int, attack string, method string) rs.InResult {
 	var totalTime time.Duration
@@ -27,11 +16,10 @@ func ShowResults(results []rs.Result, numRequests int, attack string, method str
 	latencies := make([]time.Duration, 0, successCount)
 	for _, r := range results {
 		if r.Error != nil {
-			fmt.Println("Error:", r.Error)
 			errorCount++
 		} else {
-			fmt.Println("Response Status:", r.Status)
-			fmt.Println("Response Time:", r.Elapsed)
+			slog.Debug("Response Status:", r.Status)
+			slog.Debug("Response Time:", r.Elapsed)
 			totalTime += r.Elapsed
 			successCount++
 			latencies = append(latencies, r.Elapsed)

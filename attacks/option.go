@@ -3,13 +3,14 @@ package attacks
 import "time"
 
 type Options struct {
-	URL         string
-	Rate        int
-	Requests    int
-	Timeout     time.Duration
-	Type        string
-	Method      string
-	Body        []byte
-	ContentType string
-	Headers     map[string]string
+	URL          string
+	Rate         int
+	Requests     int
+	Timeout      time.Duration
+	Type         string
+	Method       string
+	Body         []byte
+	ContentType  string
+	Headers      map[string]string
+	EmailEnabled bool
 }

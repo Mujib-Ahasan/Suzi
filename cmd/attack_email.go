@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -65,27 +66,34 @@ var attackEmailCmd = &cobra.Command{
 		header := currentAttack.ValidateHeader()
 
 		opts := attacks.Options{
-			URL:         currentAttack.AttackURL,
-			Rate:        currentAttack.AttackRate,
-			Requests:    currentAttack.AttackReq,
-			Timeout:     currentAttack.AttackTimeout,
-			Type:        currentAttack.AttackType,
-			Method:      currentAttack.AttackMethod,
-			Body:        payload,
-			ContentType: attackContentType,
-			Headers:     header,
+			URL:          currentAttack.AttackURL,
+			Rate:         currentAttack.AttackRate,
+			Requests:     currentAttack.AttackReq,
+			Timeout:      currentAttack.AttackTimeout,
+			Type:         currentAttack.AttackType,
+			Method:       currentAttack.AttackMethod,
+			Body:         payload,
+			ContentType:  attackContentType,
+			Headers:      header,
+			EmailEnabled: true,
 		}
 
-		fmt.Println("Email command invoked with:")
-		fmt.Println("SMTP Host:", currentAttack.SmtpHost)
-		fmt.Println("SMTP Port:", currentAttack.SmtpPort)
-		fmt.Println("SMTP User:", currentAttack.SmtpUser)
-		fmt.Println("SMTP TLS:", currentAttack.SmtpTLS)
-		fmt.Println("Retries:", currentAttack.SmtpRetries)
-		fmt.Println("Body:", currentAttack.AttackBody)
-		fmt.Println("content-type:", attackContentType)
+		if verbose {
+			printVerboseHeader(opts)
+		}
 
 		attackList := attacks.Run(opts, true)
+
+		switch {
+		case quiet:
+			printQuiet(attackList)
+
+		case verbose:
+			printVerbose(attackList)
+
+			// default:
+			// 	printDefault(attackList)
+		}
 
 		if err := attackList[0].Results.Err; err != nil {
 			return fmt.Errorf("error: %v ", err)
@@ -128,6 +136,7 @@ func ValidateContentType(ct string) (string, error) {
 }
 
 func (cAttack Attack) ValidateHeader() map[string]string {
+	slog.Debug("Validating header")
 	headers := make(map[string]string)
 	if strings.TrimSpace(cAttack.Header) == "" {
 		return headers
