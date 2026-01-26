@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Mujib-Ahasan/Suzi/attacks"
+	"github.com/Mujib-Ahasan/Suzi/internal/report"
 
 	"github.com/spf13/cobra"
 )
@@ -36,7 +37,13 @@ Example:
 		if err != nil {
 			return err
 		}
-
+		format = strings.ToLower(format)
+		if format != "" && format != "json" && format != "yaml" {
+			return fmt.Errorf(
+				"invalid format %q: supported formats are json and yaml",
+				format,
+			)
+		}
 		err = currentAttack.ValidateBeforeAttack()
 		if err != nil {
 			return err
@@ -68,24 +75,37 @@ Example:
 		}
 
 		if verbose {
-			printVerboseHeader(opts)
+			report.PrintVerboseHeader(opts)
 		}
 		slog.Debug("Preparing for attack")
 		attackList := attacks.Run(opts, false)
-
-		switch {
-		case quiet:
-			printQuiet(attackList)
-
-		case verbose:
-			printVerbose(attackList)
-
-			// default:
-			// 	printDefault(attackList)
-		}
-
 		if err := attackList[0].Results.Err; err != nil {
 			return fmt.Errorf("error: %v ", err)
+		}
+
+		// 1️⃣ Convert to unified result
+		result := report.FromAttackList(attackList)
+		// 2️⃣ Output decision
+		switch format {
+		case "json":
+			if output != "" {
+				if err := report.WriteJSON(result, output); err != nil {
+					return err
+				}
+			} else {
+				if err := report.WriteJSONToStdout(result); err != nil {
+					return err
+				}
+			}
+		case "text":
+			switch {
+			case quiet:
+				report.PrintQuiet(attackList)
+			case verbose:
+				report.PrintVerbose(attackList)
+			default:
+				report.PrintDefault(attackList)
+			}
 		}
 
 		return nil

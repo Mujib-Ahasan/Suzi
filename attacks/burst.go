@@ -27,5 +27,7 @@ func BurstAttack(opts Options) rs.PResultIn {
 		results = append(results, r)
 	}
 	sc := sr.ShowResults(results, opts.Requests, "burst", opts.Method)
+	sc.URl = opts.URL
+	sc.RequestsPerSecond = opts.Rate
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

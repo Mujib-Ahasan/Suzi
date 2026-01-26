@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Mujib-Ahasan/Suzi/attacks"
+	"github.com/Mujib-Ahasan/Suzi/internal/report"
 	ml "github.com/Mujib-Ahasan/Suzi/mail"
 
 	"github.com/spf13/cobra"
@@ -48,7 +49,13 @@ var attackEmailCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
+		format = strings.ToLower(format)
+		if format != "" && format != "json" && format != "yaml" {
+			return fmt.Errorf(
+				"invalid format %q: supported formats are json and yaml",
+				format,
+			)
+		}
 		err = currentAttack.ValidateBeforeAttack()
 		if err != nil {
 			return err
@@ -79,22 +86,11 @@ var attackEmailCmd = &cobra.Command{
 		}
 
 		if verbose {
-			printVerboseHeader(opts)
+			report.PrintVerboseHeader(opts)
 		}
+		slog.Debug("Preparing for Email attack")
 
 		attackList := attacks.Run(opts, true)
-
-		switch {
-		case quiet:
-			printQuiet(attackList)
-
-		case verbose:
-			printVerbose(attackList)
-
-			// default:
-			// 	printDefault(attackList)
-		}
-
 		if err := attackList[0].Results.Err; err != nil {
 			return fmt.Errorf("error: %v ", err)
 		}
@@ -104,16 +100,42 @@ var attackEmailCmd = &cobra.Command{
 			Port:        currentAttack.SmtpPort,
 			Username:    currentAttack.SmtpUser,
 			Password:    currentAttack.SmtpPass,
-			From:        currentAttack.EmailFrom,
+			FromEmail:   currentAttack.EmailFrom,
 			UseTLS:      currentAttack.SmtpTLS,
 			DialTimeout: 5 * time.Second,
 			SendTimeout: time.Duration(currentAttack.SmtpTimeoutS) * time.Second,
 			Retries:     currentAttack.SmtpRetries,
+			ToEmail:     currentAttack.EmailTo,
 		}
 
 		reportHTML := ml.BuildEmailReportHTML(attackList, opts.URL)
 		if err := cfg.SendMail(currentAttack.EmailTo, reportHTML); err != nil {
 			return fmt.Errorf("error: %w", err)
+		}
+
+		// 1️⃣ Convert to unified result
+		result := report.FromAttackListEmail(attackList, cfg)
+		// 2️⃣ Output decision
+		switch format {
+		case "json":
+			if output != "" {
+				if err := report.WriteJSON(result, output); err != nil {
+					return err
+				}
+			} else {
+				if err := report.WriteJSONToStdout(result); err != nil {
+					return err
+				}
+			}
+		case "text":
+			switch {
+			case quiet:
+				report.PrintQuiet(attackList)
+			case verbose:
+				report.PrintVerbose(attackList)
+			default:
+				report.PrintDefault(attackList)
+			}
 		}
 
 		return nil

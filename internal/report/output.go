@@ -1,4 +1,4 @@
-package cmd
+package report
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 	"github.com/Mujib-Ahasan/Suzi/common"
 )
 
-func printQuiet(s []common.PlotC) {
+func PrintQuiet(s []common.PlotC) {
 	for _, e := range s {
 		fmt.Printf("attack=%s success=%d failures=%d avg=%dms p99=%dms\n", e.Attack, e.Results.PRes.Success_Count, e.Results.PRes.Error_Count, e.Results.PRes.ART.Milliseconds(), e.Results.PRes.P99.Milliseconds())
 	}
 }
 
-func printVerbose(attacks []common.PlotC) {
+func PrintVerbose(attacks []common.PlotC) {
 	fmt.Println("🚀 Suzi Load Test Result")
 	fmt.Println("────────────────────────────────")
 
@@ -37,7 +37,7 @@ func printVerbose(attacks []common.PlotC) {
 	}
 }
 
-func printVerboseHeader(opts attacks.Options) {
+func PrintVerboseHeader(opts attacks.Options) {
 	fmt.Println("🚀 Suzi Load Test")
 	fmt.Println("────────────────────────────")
 	fmt.Printf("Target        %s\n", opts.URL)
@@ -60,7 +60,7 @@ func printVerboseHeader(opts attacks.Options) {
 	fmt.Println()
 }
 
-func printDefault(attacks []common.PlotC) {
+func PrintDefault(attacks []common.PlotC) {
 	for _, e := range attacks {
 		fmt.Printf("Attack: %s\n", e.Attack)
 

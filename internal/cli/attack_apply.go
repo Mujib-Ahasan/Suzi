@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/Mujib-Ahasan/Suzi/attacks"
 	"github.com/Mujib-Ahasan/Suzi/common"
+	"github.com/Mujib-Ahasan/Suzi/internal/report"
 	ml "github.com/Mujib-Ahasan/Suzi/mail"
 
 	"github.com/spf13/cobra"
@@ -76,7 +77,7 @@ as the primary configuration source. CLI flags override YAML values.`,
 		}
 
 		if verbose {
-			printVerboseHeader(opts)
+			report.PrintVerboseHeader(opts)
 		}
 		slog.Debug("Preparing for attack ")
 		var attackList []common.PlotC
@@ -90,7 +91,7 @@ as the primary configuration source. CLI flags override YAML values.`,
 				Port:        cfg.Email.SMTP.Port,
 				Username:    cfg.Email.SMTP.User,
 				Password:    cfg.Email.SMTP.Pass,
-				From:        cfg.Email.From,
+				FromEmail:   cfg.Email.From,
 				UseTLS:      cfg.Email.SMTP.TLS,
 				DialTimeout: 5 * time.Second,
 				SendTimeout: time.Duration(cfg.Email.SMTP.TimeoutSeconds) * time.Second,
@@ -100,13 +101,13 @@ as the primary configuration source. CLI flags override YAML values.`,
 
 		switch {
 		case quiet:
-			printQuiet(attackList)
+			report.PrintQuiet(attackList)
 
 		case verbose:
-			printVerbose(attackList)
+			report.PrintVerbose(attackList)
 
 		default:
-			printDefault(attackList)
+			report.PrintDefault(attackList)
 		}
 
 		if err := attackList[0].Results.Err; err != nil {

@@ -27,5 +27,7 @@ func RandomLoadAttack(opts Options) rs.PResultIn {
 		results = append(results, result)
 	}
 	sc := sr.ShowResults(results, opts.Requests, "random", opts.Method)
+	sc.URl = opts.URL
+	sc.RequestsPerSecond = opts.Rate
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

@@ -38,5 +38,7 @@ func RampUpAttack(opts Options, startRate int, peakRate int) rs.PResultIn {
 	}
 
 	sc := sr.ShowResults(results, opts.Requests, "rampup", opts.Method)
+	sc.URl = opts.URL
+	sc.RequestsPerSecond = opts.Rate
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

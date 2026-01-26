@@ -22,8 +22,10 @@ type PlotC struct {
 }
 
 type InResult struct {
+	URl                string
 	Method             string
 	Attack             string
+	RequestsPerSecond  int
 	Number_Of_Requests int
 	Success_Count      int
 	Error_Count        int
@@ -33,4 +35,5 @@ type InResult struct {
 	P95                time.Duration
 	P99                time.Duration
 	Max                time.Duration
+	Min                time.Duration
 }
