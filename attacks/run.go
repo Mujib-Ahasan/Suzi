@@ -7,17 +7,8 @@ import (
 	rs "github.com/Mujib-Ahasan/Suzi/common"
 )
 
-func Run(opts Options, mail bool) []rs.PlotC {
+func Run(opts Options) []rs.PlotC {
 	var attackAll []rs.PlotC
-	if mail {
-		slog.Debug("All Attack at once! Starting... \n")
-		attackAll = append(attackAll, rs.PlotC{Attack: "basic", Results: BasicAttack(opts)})
-		attackAll = append(attackAll, rs.PlotC{Attack: "burst", Results: BurstAttack(opts)})
-		attackAll = append(attackAll, rs.PlotC{Attack: "rampup", Results: RampUpAttack(opts, 1, 15)})
-		attackAll = append(attackAll, rs.PlotC{Attack: "random", Results: RandomLoadAttack(opts)})
-		return attackAll
-	}
-
 	switch opts.Type {
 	case "all":
 		slog.Debug("All Attack at once! Starting... \n")

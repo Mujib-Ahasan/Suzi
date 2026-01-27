@@ -2,6 +2,11 @@ package report
 
 import "time"
 
+type LoadTestResultAll struct {
+	Result []LoadTestResult `json:"result"`
+	Email  *EmailConfig     `json:"email,omitempty"`
+}
+
 type LoadTestResult struct {
 	Version    string       `json:"version"`
 	Test       TestInfo     `json:"test"`
@@ -10,7 +15,6 @@ type LoadTestResult struct {
 	Throughput Throughput   `json:"throughput"`
 	Errors     []ErrorStat  `json:"errors,omitempty"`
 	Timestamp  Timestamp    `json:"timestamp"`
-	Email      *EmailConfig `json:"email,omitempty"`
 }
 
 type EmailConfig struct {

@@ -1,7 +1,10 @@
 package cli
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"strings"
@@ -13,7 +16,7 @@ import (
 	ml "github.com/Mujib-Ahasan/Suzi/mail"
 
 	"github.com/spf13/cobra"
-	"go.yaml.in/yaml/v2"
+	"gopkg.in/yaml.v3"
 )
 
 var applyFile string
@@ -29,6 +32,18 @@ as the primary configuration source. CLI flags override YAML values.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if applyFile == "" {
 			return fmt.Errorf("config file is required (use -f or --file)")
+		}
+		format = strings.ToLower(format)
+		if format != "text" && format != "json" && format != "yaml" {
+			return fmt.Errorf(
+				"invalid format %q: supported formats are json and yaml",
+				format,
+			)
+		}
+
+		err := DecodeStrictYAML(applyFile, &currentAttack)
+		if err != nil {
+			return err
 		}
 
 		cfg, err := loadAttackFromYAML(applyFile)
@@ -82,13 +97,13 @@ as the primary configuration source. CLI flags override YAML values.`,
 		slog.Debug("Preparing for attack ")
 		var attackList []common.PlotC
 		var mailCfg ml.Config
-		var result []report.LoadTestResult
+		var result report.LoadTestResultAll
 
 		if cfg.Email == nil {
-			attackList = attacks.Run(opts, false)
+			attackList = attacks.Run(opts)
 			result = report.FromAttackList(attackList)
 		} else {
-			attackList = attacks.Run(opts, true)
+			attackList = attacks.Run(opts)
 			mailCfg = ml.Config{
 				ToEmail:     cfg.Email.To,
 				Host:        cfg.Email.SMTP.Host,
@@ -113,6 +128,19 @@ as the primary configuration source. CLI flags override YAML values.`,
 				if err := report.WriteJSONToStdout(result); err != nil {
 					return err
 				}
+			}
+		case "yaml":
+			if output != "" {
+				if err := report.WriteYAML(result, output); err != nil {
+					return err
+				}
+			} else {
+				if err := report.WriteYAMLToStdout(result); err != nil {
+					return err
+				}
+			}
+			if output != "" {
+
 			}
 		case "text":
 			switch {
@@ -243,6 +271,27 @@ func (s *SMTPConfig) Validate() error {
 
 	if s.Retries < 0 {
 		return fmt.Errorf("email.smtp.retries cannot be negative")
+	}
+
+	return nil
+}
+
+func DecodeStrictYAML(path string, out any) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	dec := yaml.NewDecoder(bytes.NewReader(data))
+	dec.KnownFields(true)
+
+	if err := dec.Decode(out); err != nil {
+		return fmt.Errorf("invalid: %w", err)
+	}
+
+	// Optional: ensure only ONE document
+	if err := dec.Decode(&struct{}{}); err != io.EOF {
+		return errors.New("multiple YAML documents are not supported")
 	}
 
 	return nil
