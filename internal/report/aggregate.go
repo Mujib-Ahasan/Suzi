@@ -133,10 +133,7 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResul
 		}
 
 		email := EmailConfig{
-			Host:        email.Host,
-			Port:        email.Port,
 			From:        email.FromEmail,
-			UseTLS:      email.UseTLS,
 			To:          email.ToEmail,
 			DialTimeout: email.DialTimeout,
 			SendTimeout: email.SendTimeout,
@@ -168,7 +165,7 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResul
 			Throughput: Throughput{
 				RequestsPerSecond: r.Results.PRes.RequestsPerSecond,
 			},
-			Email:  email,
+			Email:  &email,
 			Errors: errors,
 			Timestamp: Timestamp{
 				StartedAt:  start.Format(time.RFC3339),

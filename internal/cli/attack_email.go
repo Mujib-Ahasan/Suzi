@@ -91,9 +91,6 @@ var attackEmailCmd = &cobra.Command{
 		slog.Debug("Preparing for Email attack")
 
 		attackList := attacks.Run(opts, true)
-		if err := attackList[0].Results.Err; err != nil {
-			return fmt.Errorf("error: %v ", err)
-		}
 
 		cfg := ml.Config{
 			Host:        currentAttack.SmtpHost,
@@ -109,9 +106,6 @@ var attackEmailCmd = &cobra.Command{
 		}
 
 		reportHTML := ml.BuildEmailReportHTML(attackList, opts.URL)
-		if err := cfg.SendMail(currentAttack.EmailTo, reportHTML); err != nil {
-			return fmt.Errorf("error: %w", err)
-		}
 
 		// 1️⃣ Convert to unified result
 		result := report.FromAttackListEmail(attackList, cfg)
@@ -136,6 +130,15 @@ var attackEmailCmd = &cobra.Command{
 			default:
 				report.PrintDefault(attackList)
 			}
+		}
+		// sending email should be done at last so that error can not break the report.
+		if err := cfg.SendMail(currentAttack.EmailTo, reportHTML); err != nil {
+			return fmt.Errorf("error: %w", err)
+		}
+
+		// Error should be checked at last or would not get the report.
+		if err := attackList[0].Results.Err; err != nil {
+			return fmt.Errorf("error: %v ", err)
 		}
 
 		return nil

@@ -82,11 +82,15 @@ as the primary configuration source. CLI flags override YAML values.`,
 		slog.Debug("Preparing for attack ")
 		var attackList []common.PlotC
 		var mailCfg ml.Config
+		var result []report.LoadTestResult
+
 		if cfg.Email == nil {
 			attackList = attacks.Run(opts, false)
+			result = report.FromAttackList(attackList)
 		} else {
 			attackList = attacks.Run(opts, true)
 			mailCfg = ml.Config{
+				ToEmail:     cfg.Email.To,
 				Host:        cfg.Email.SMTP.Host,
 				Port:        cfg.Email.SMTP.Port,
 				Username:    cfg.Email.SMTP.User,
@@ -97,17 +101,28 @@ as the primary configuration source. CLI flags override YAML values.`,
 				SendTimeout: time.Duration(cfg.Email.SMTP.TimeoutSeconds) * time.Second,
 				Retries:     cfg.Email.SMTP.Retries,
 			}
+			result = report.FromAttackListEmail(attackList, mailCfg)
 		}
-
-		switch {
-		case quiet:
-			report.PrintQuiet(attackList)
-
-		case verbose:
-			report.PrintVerbose(attackList)
-
-		default:
-			report.PrintDefault(attackList)
+		switch format {
+		case "json":
+			if output != "" {
+				if err := report.WriteJSON(result, output); err != nil {
+					return err
+				}
+			} else {
+				if err := report.WriteJSONToStdout(result); err != nil {
+					return err
+				}
+			}
+		case "text":
+			switch {
+			case quiet:
+				report.PrintQuiet(attackList)
+			case verbose:
+				report.PrintVerbose(attackList)
+			default:
+				report.PrintDefault(attackList)
+			}
 		}
 
 		if err := attackList[0].Results.Err; err != nil {

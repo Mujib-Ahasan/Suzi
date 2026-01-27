@@ -79,9 +79,6 @@ Example:
 		}
 		slog.Debug("Preparing for attack")
 		attackList := attacks.Run(opts, false)
-		if err := attackList[0].Results.Err; err != nil {
-			return fmt.Errorf("error: %v ", err)
-		}
 
 		// 1️⃣ Convert to unified result
 		result := report.FromAttackList(attackList)
@@ -106,6 +103,10 @@ Example:
 			default:
 				report.PrintDefault(attackList)
 			}
+		}
+		// Error should be checked at last or would not get the report.
+		if err := attackList[0].Results.Err; err != nil {
+			return fmt.Errorf("error: %v ", err)
 		}
 
 		return nil

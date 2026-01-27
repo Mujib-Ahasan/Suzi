@@ -10,14 +10,11 @@ type LoadTestResult struct {
 	Throughput Throughput   `json:"throughput"`
 	Errors     []ErrorStat  `json:"errors,omitempty"`
 	Timestamp  Timestamp    `json:"timestamp"`
-	Email      EmailConfig  `json:"email,omitempty"`
+	Email      *EmailConfig `json:"email,omitempty"`
 }
 
 type EmailConfig struct {
-	Host        string        `json:"host"`
-	Port        int           `json:"port"`
 	From        string        `json:"from"`
-	UseTLS      bool          `json:"usertls"`
 	DialTimeout time.Duration `json:"dialTimeout,omitempty"`
 	SendTimeout time.Duration `json:"sendTimeout"`
 	Retries     int           `json:"retries"`
