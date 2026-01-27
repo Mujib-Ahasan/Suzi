@@ -1,4 +1,4 @@
-package cmd
+package cli
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 
 var quiet bool
 var verbose bool
+var format string
+var output string
 
 var attackCmd = &cobra.Command{
 	Use:   "attack",
@@ -27,4 +29,6 @@ func init() {
 
 	attackCmd.PersistentFlags().BoolVar(&quiet, "quiet", false, "machine-friendly output")
 	attackCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "human-friendly output")
+	attackCmd.PersistentFlags().StringVar(&format, "format", "text", "Format could be JSON, YAML")
+	attackCmd.PersistentFlags().StringVar(&output, "output", "", "file path where report will be stored")
 }

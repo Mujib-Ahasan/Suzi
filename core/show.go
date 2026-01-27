@@ -10,7 +10,7 @@ import (
 
 func ShowResults(results []rs.Result, numRequests int, attack string, method string) rs.InResult {
 	var totalTime time.Duration
-	var avg, p50, p90, p95, p99, max time.Duration
+	var avg, p50, p90, p95, p99, max, min time.Duration
 
 	var successCount, errorCount int
 	latencies := make([]time.Duration, 0, successCount)
@@ -38,6 +38,7 @@ func ShowResults(results []rs.Result, numRequests int, attack string, method str
 			p95 = percentileCalculation(latencies, 95)
 			p99 = percentileCalculation(latencies, 99)
 			max = latencies[len(latencies)-1]
+			min = latencies[0]
 		}
 	}
 
@@ -53,5 +54,6 @@ func ShowResults(results []rs.Result, numRequests int, attack string, method str
 		P95:                p95,
 		P99:                p99,
 		Max:                max,
+		Min:                min,
 	}
 }

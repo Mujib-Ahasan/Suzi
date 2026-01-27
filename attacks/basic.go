@@ -33,5 +33,7 @@ func BasicAttack(opts Options) rs.PResultIn {
 		results = append(results, result)
 	}
 	sc := sr.ShowResults(results, opts.Requests, "basic", opts.Method)
+	sc.URl = opts.URL
+	sc.RequestsPerSecond = opts.Rate
 	return rs.PResultIn{PRes: sc, NRes: results}
 }

@@ -28,7 +28,7 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 
 	body := opts.ConvertBody()
 
-	// making a request....
+	// making a request
 	req, err := http.NewRequest(opts.Method, opts.URL, body)
 	if err != nil {
 		resp_results <- rs.Result{Error: err}
@@ -47,7 +47,6 @@ func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result
 	resp, err := client_body.Do(req)
 	elapsed := time.Since(start)
 	if err != nil {
-		// fmt.Printf("Error_2:  %v\n", err)
 		resp_results <- rs.Result{Error: err}
 		return
 	}
