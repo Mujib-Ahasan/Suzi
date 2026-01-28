@@ -7,7 +7,7 @@ import (
 	"github.com/Mujib-Ahasan/Suzi/mail"
 )
 
-func FromAttackList(list []common.PlotC) []LoadTestResult {
+func FromAttackList(list []common.PlotC) LoadTestResultAll {
 	var (
 		totalRequests   int
 		successRequests int
@@ -83,7 +83,11 @@ func FromAttackList(list []common.PlotC) []LoadTestResult {
 
 	}
 
-	return result
+	resultAll := LoadTestResultAll{
+		Result: result,
+	}
+
+	return resultAll
 }
 
 func percent(a, b int) float64 {
@@ -93,7 +97,7 @@ func percent(a, b int) float64 {
 	return (float64(a) / float64(b)) * 100
 }
 
-func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResult {
+func FromAttackListEmail(list []common.PlotC, email mail.Config) LoadTestResultAll {
 	var (
 		totalRequests   int
 		successRequests int
@@ -101,6 +105,7 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResul
 		errorMap        = make(map[string]*ErrorStat)
 	)
 	result := []LoadTestResult{}
+	mail := EmailConfig{}
 	for _, r := range list {
 
 		start := time.Now()
@@ -132,11 +137,8 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResul
 			P99Ms: time.Duration(r.Results.PRes.P99.Milliseconds()),
 		}
 
-		email := EmailConfig{
-			Host:        email.Host,
-			Port:        email.Port,
+		mail = EmailConfig{
 			From:        email.FromEmail,
-			UseTLS:      email.UseTLS,
 			To:          email.ToEmail,
 			DialTimeout: email.DialTimeout,
 			SendTimeout: email.SendTimeout,
@@ -168,7 +170,6 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResul
 			Throughput: Throughput{
 				RequestsPerSecond: r.Results.PRes.RequestsPerSecond,
 			},
-			Email:  email,
 			Errors: errors,
 			Timestamp: Timestamp{
 				StartedAt:  start.Format(time.RFC3339),
@@ -180,7 +181,11 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) []LoadTestResul
 		result = append(result, testResult)
 
 	}
+	resultAll := LoadTestResultAll{
+		Result: result,
+		Email:  &mail,
+	}
 
-	return result
+	return resultAll
 
 }

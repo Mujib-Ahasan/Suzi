@@ -22,10 +22,10 @@ var attackRunCmd = &cobra.Command{
 	Long: `Execute HTTP load attacks using different strategies.
 
 Supported attack types:
-  - constant
-  - ramp
-  - spike
-  - custom patterns
+  - basic
+  - burst
+  - random
+  - rampup
 
 Example:
   yourproject attack --url https://example.com --rate 100 --req 1000 --attack-type constant`,
@@ -38,7 +38,7 @@ Example:
 			return err
 		}
 		format = strings.ToLower(format)
-		if format != "" && format != "json" && format != "yaml" {
+		if format != "text" && format != "json" && format != "yaml" {
 			return fmt.Errorf(
 				"invalid format %q: supported formats are json and yaml",
 				format,
@@ -78,10 +78,7 @@ Example:
 			report.PrintVerboseHeader(opts)
 		}
 		slog.Debug("Preparing for attack")
-		attackList := attacks.Run(opts, false)
-		if err := attackList[0].Results.Err; err != nil {
-			return fmt.Errorf("error: %v ", err)
-		}
+		attackList := attacks.Run(opts)
 
 		// 1️⃣ Convert to unified result
 		result := report.FromAttackList(attackList)
@@ -97,6 +94,19 @@ Example:
 					return err
 				}
 			}
+		case "yaml":
+			if output != "" {
+				if err := report.WriteYAML(result, output); err != nil {
+					return err
+				}
+			} else {
+				if err := report.WriteYAMLToStdout(result); err != nil {
+					return err
+				}
+			}
+			if output != "" {
+
+			}
 		case "text":
 			switch {
 			case quiet:
@@ -106,6 +116,10 @@ Example:
 			default:
 				report.PrintDefault(attackList)
 			}
+		}
+		// Error should be checked at last or would not get the report.
+		if err := attackList[0].Results.Err; err != nil {
+			return fmt.Errorf("error: %v ", err)
 		}
 
 		return nil
@@ -120,7 +134,7 @@ func init() {
 	attackRunCmd.Flags().IntVar(&currentAttack.AttackRate, "rate", 10, "Requests per second")
 	attackRunCmd.Flags().IntVar(&currentAttack.AttackReq, "req", 100, "Total number of requests to send")
 	attackRunCmd.Flags().DurationVar(&currentAttack.AttackTimeout, "timeout", 5*time.Second, "Request timeout duration")
-	attackRunCmd.Flags().StringVar(&currentAttack.AttackType, "attack-type", "constant", "Type of attack (basic/burst/rampup/random)")
+	attackRunCmd.Flags().StringVar(&currentAttack.AttackType, "attack-type", "basic", "Type of attack (basic/burst/rampup/random)")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackMethod, "method", "GET", "HTTP method (GET, POST, PUT, DELETE, etc.)")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBody, "body", "", "Inline POST body")
 	attackRunCmd.Flags().StringVar(&currentAttack.AttackBodyFile, "body-file", "", "Read POST body from file")

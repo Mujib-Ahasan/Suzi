@@ -34,7 +34,7 @@ func BuildEmailReportHTML(plots []pl.PlotC, url string) string {
             
             <!-- Header -->
             <h2 style="text-align:center; color:#2c662d; margin-bottom:5px;">⚡ Suzi Load Test Report</h2>
-            <p style="text-align:center; color:#444; margin-top:0;">Attack: <b>%s</b> | Generated on: %s</p>
+            <p style="text-align:center; color:#444; margin-top:0;">Attack: <b>%s</b> | Method: <b>%s</b> | Generated on: %s</p>
             
             <!-- Summary -->
             <div style="display:flex; justify-content:space-around; margin:15px 0;">
@@ -68,7 +68,7 @@ func BuildEmailReportHTML(plots []pl.PlotC, url string) string {
         </div>
     </div>
 `,
-			plot.Attack, timestamp,
+			plot.Attack, plot.Results.PRes.Method, timestamp,
 			plot.Results.PRes.Success_Count, plot.Results.PRes.Error_Count,
 			float64(plot.Results.PRes.P50)/float64(time.Millisecond),
 			float64(plot.Results.PRes.P90)/float64(time.Millisecond),
