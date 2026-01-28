@@ -54,7 +54,7 @@ Example:
 			return err
 		}
 
-		attackContentType, err := ValidateContentType(currentAttack.AttackContentType)
+		currentAttack.AttackContentType, err = ValidateContentType(currentAttack.AttackContentType)
 		if err != nil {
 			return err
 		}
@@ -69,7 +69,7 @@ Example:
 			Type:         currentAttack.AttackType,
 			Method:       currentAttack.AttackMethod,
 			Body:         payload,
-			ContentType:  attackContentType,
+			ContentType:  currentAttack.AttackContentType,
 			Headers:      header,
 			EmailEnabled: false,
 		}

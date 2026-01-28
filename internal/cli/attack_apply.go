@@ -20,9 +20,10 @@ import (
 )
 
 var applyFile string
+var set string
 
 // applyCmd represents the attack apply command
-var applyCmd = &cobra.Command{
+var attackApplyCmd = &cobra.Command{
 	Use:   "apply",
 	Short: "Apply an attack configuration from a YAML file",
 	Long: `Apply a load test configuration from a YAML file.
@@ -69,7 +70,7 @@ as the primary configuration source. CLI flags override YAML values.`,
 			return err
 		}
 
-		attackContentType, err := ValidateContentType(currentAttack.AttackContentType)
+		attackContentType, err := ValidateContentType(cfg.AttackContentType)
 		if err != nil {
 			return err
 		}
@@ -78,6 +79,8 @@ as the primary configuration source. CLI flags override YAML values.`,
 		if cfg.Email != nil {
 			emailFlag = true
 		}
+		header := cfg.ValidateHeader()
+		// err = cfg.SetValue(set)
 
 		opts := attacks.Options{
 			URL:          cfg.AttackURL,
@@ -88,6 +91,7 @@ as the primary configuration source. CLI flags override YAML values.`,
 			Method:       cfg.AttackMethod,
 			Body:         payload,
 			ContentType:  attackContentType,
+			Headers:      header,
 			EmailEnabled: emailFlag,
 		}
 
@@ -168,9 +172,10 @@ as the primary configuration source. CLI flags override YAML values.`,
 }
 
 func init() {
-	applyCmd.Flags().StringVarP(&applyFile, "file", "f", "", "Path to attack YAML file")
+	attackApplyCmd.Flags().StringVarP(&applyFile, "file", "f", "", "Path to attack YAML file")
+	attackApplyCmd.Flags().StringVar(&set, "set", "", "override values then apply")
 
-	attackCmd.AddCommand(applyCmd)
+	attackCmd.AddCommand(attackApplyCmd)
 }
 
 func loadAttackFromYAML(path string) (*Attack, error) {
@@ -296,3 +301,27 @@ func DecodeStrictYAML(path string, out any) error {
 
 	return nil
 }
+
+// func (current *Attack) SetValue(set string) error {
+// 	fmt.Printf("%s \n", set)
+
+// 	set = strings.TrimSpace(set)
+// 	// setMap := make(map[string]string)
+// 	pairs := strings.Split(set, ",")
+// 	fmt.Println(pairs)
+
+// 	for _, pair := range pairs {
+// 		parts := strings.SplitN(pair, "=", 2)
+// 		if len(parts) == 2 {
+// 			key := strings.TrimSpace(parts[0])
+// 			value := strings.TrimSpace(parts[1])
+
+// 			fmt.Printf("%s: %s \n", key, value)
+// 		}
+// 	}
+
+// 	os.Exit(1)
+
+// 	return nil
+
+// }
