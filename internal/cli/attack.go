@@ -28,7 +28,7 @@ func init() {
 	rootCmd.AddCommand(attackCmd)
 
 	attackCmd.PersistentFlags().BoolVar(&quiet, "quiet", false, "machine-friendly output")
-	attackCmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "human-friendly output")
+	attackCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "human-friendly output")
 	attackCmd.PersistentFlags().StringVar(&format, "format", "text", "Format could be JSON, YAML")
 	attackCmd.PersistentFlags().StringVar(&output, "output", "", "file path where report will be stored")
 }

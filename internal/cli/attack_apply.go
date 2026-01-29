@@ -7,6 +7,8 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -51,8 +53,11 @@ as the primary configuration source. CLI flags override YAML values.`,
 		if err != nil {
 			return err
 		}
+		err = cfg.SetValue(set)
+		if err != nil {
+			return err
+		}
 		cfg.AttackMethod = strings.ToUpper(cfg.AttackMethod)
-
 		if err := cfg.ValidateYaml(); err != nil {
 			return err
 		}
@@ -61,10 +66,12 @@ as the primary configuration source. CLI flags override YAML values.`,
 		if err != nil {
 			return err
 		}
+
 		err = cfg.ValidateBeforeAttack()
 		if err != nil {
 			return err
 		}
+
 		payload, err := cfg.ValidateBody()
 		if err != nil {
 			return err
@@ -80,7 +87,6 @@ as the primary configuration source. CLI flags override YAML values.`,
 			emailFlag = true
 		}
 		header := cfg.ValidateHeader()
-		// err = cfg.SetValue(set)
 
 		opts := attacks.Options{
 			URL:          cfg.AttackURL,
@@ -302,26 +308,79 @@ func DecodeStrictYAML(path string, out any) error {
 	return nil
 }
 
-// func (current *Attack) SetValue(set string) error {
-// 	fmt.Printf("%s \n", set)
+func (current *Attack) SetValue(set string) error {
+	set = strings.TrimSpace(set)
+	pairs := strings.Split(set, ",")
+	val := reflect.ValueOf(current).Elem()
+	typ := val.Type()
 
-// 	set = strings.TrimSpace(set)
-// 	// setMap := make(map[string]string)
-// 	pairs := strings.Split(set, ",")
-// 	fmt.Println(pairs)
+	for _, pair := range pairs {
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) == 2 {
+			key := strings.TrimSpace(parts[0])
+			value := strings.TrimSpace(parts[1])
 
-// 	for _, pair := range pairs {
-// 		parts := strings.SplitN(pair, "=", 2)
-// 		if len(parts) == 2 {
-// 			key := strings.TrimSpace(parts[0])
-// 			value := strings.TrimSpace(parts[1])
+			for i := 0; i < typ.NumField(); i++ {
+				typeOfField := typ.Field(i)
+				yamltag := typeOfField.Tag.Get("yaml")
 
-// 			fmt.Printf("%s: %s \n", key, value)
-// 		}
-// 	}
+				tagName := strings.Split(yamltag, ",")[0]
 
-// 	os.Exit(1)
+				if tagName == "-" || tagName == "" {
+					continue
+				}
 
-// 	return nil
+				if tagName == key {
+					field := val.Field(i)
+					if !field.CanSet() {
+						return fmt.Errorf("cannot set the value of Field: %s", typeOfField.Name)
+					}
+					//seting the filed value
+					if err := setValue(field, value); err != nil {
+						return fmt.Errorf("failed setting %s: %w", key, err)
+					}
 
-// }
+				}
+			}
+		}
+	}
+
+	return nil
+
+}
+
+func setValue(field reflect.Value, value string) error {
+
+	switch field.Kind() {
+	case reflect.String:
+		field.SetString(value)
+	case reflect.Int, reflect.Int64, reflect.Int32:
+		if field.Type() == reflect.TypeOf(time.Duration(0)) {
+			d, err := time.ParseDuration(value)
+			if err != nil {
+				return err
+			}
+			field.SetInt(int64(d))
+			return nil
+		}
+
+		intVal, err := strconv.Atoi(value)
+		if err != nil {
+			return err
+		}
+		field.SetInt(int64(intVal))
+
+	case reflect.Bool:
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return err
+		}
+		field.SetBool(b)
+
+	default:
+		return fmt.Errorf("Unsupported field type: %s", field.Kind())
+
+	}
+
+	return nil
+}
