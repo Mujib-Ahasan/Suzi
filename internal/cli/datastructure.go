@@ -6,13 +6,14 @@ type Attack struct {
 	AttackURL         string        `yaml:"url"`
 	AttackRate        int           `yaml:"rate"`
 	AttackReq         int           `yaml:"requests"`
-	AttackTimeout     time.Duration `yaml:"timeout"`
+	AttackTimeout     time.Duration `yaml:"timeout,omitempty"`
 	AttackType        string        `yaml:"attack-type"`
 	AttackMethod      string        `yaml:"method"`
-	AttackBody        string        `yaml:"body"`
-	AttackBodyFile    string        `yaml:"body-file"`
-	AttackContentType string        `yaml:"content-type"`
-	Header            string        `yaml:"header"`
+	AttackBody        string        `yaml:"body,omitempty"`
+	AttackBodyFile    string        `yaml:"body-file,omitempty"`
+	AttackContentType string        `yaml:"content-type,omitempty"`
+	Header            string        `yaml:"header,omitempty"`
+	EmailBool         bool          `yaml:"emailEnable"`
 	Email             *EmailConfig  `yaml:"email,omitempty"`
 	EmailTo           string        `yaml:"-"`
 	SmtpHost          string        `yaml:"-"`
@@ -28,15 +29,15 @@ type Attack struct {
 type EmailConfig struct {
 	To   string     `yaml:"to"`
 	From string     `yaml:"from"`
-	SMTP SMTPConfig `yaml:"smtp"`
+	SMTP SMTPConfig `yaml:"smtp,omitempty"`
 }
 
 type SMTPConfig struct {
-	Host           string `yaml:"host"`
-	Port           int    `yaml:"port"`
-	User           string `yaml:"user"`
-	Pass           string `yaml:"pass"`
-	TLS            bool   `yaml:"tls"`
-	Retries        int    `yaml:"retries"`
-	TimeoutSeconds int    `yaml:"timeout_seconds"`
+	Host           string `yaml:"host,omitempty"`
+	Port           int    `yaml:"port,omitempty"`
+	User           string `yaml:"user,omitempty"`
+	Pass           string `yaml:"pass,omitempty"`
+	TLS            bool   `yaml:"tls,omitempty"`
+	Retries        int    `yaml:"retries,omitempty"`
+	TimeoutSeconds int    `yaml:"timeout_seconds,omitempty"`
 }
