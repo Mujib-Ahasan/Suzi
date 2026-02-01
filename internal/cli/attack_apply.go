@@ -44,49 +44,20 @@ as the primary configuration source. CLI flags override YAML values.`,
 			)
 		}
 
-		err := DecodeStrictYAML(applyFile, &currentAttack)
-		if err != nil {
-			return err
-		}
-
 		cfg, err := loadAttackFromYAML(applyFile)
 		if err != nil {
 			return err
 		}
-		err = cfg.SetValue(set)
-		if err != nil {
-			return err
-		}
-		cfg.AttackMethod = strings.ToUpper(cfg.AttackMethod)
-		if err := cfg.ValidateYaml(); err != nil {
-			return err
-		}
 
-		err = cfg.ValidateMethod()
+		cfg, payload, attackContentType, header, err := cfg.LoadAndValidateAttack(applyFile)
 		if err != nil {
 			return err
 		}
 
-		err = cfg.ValidateBeforeAttack()
-		if err != nil {
-			return err
-		}
-
-		payload, err := cfg.ValidateBody()
-		if err != nil {
-			return err
-		}
-
-		attackContentType, err := ValidateContentType(cfg.AttackContentType)
-		if err != nil {
-			return err
-		}
 		emailFlag := false
-
 		if cfg.Email != nil {
 			emailFlag = true
 		}
-		header := cfg.ValidateHeader()
 
 		opts := attacks.Options{
 			URL:          cfg.AttackURL,
@@ -309,16 +280,21 @@ func DecodeStrictYAML(path string, out any) error {
 }
 
 func (current *Attack) SetValue(set string) error {
+	if set == "" {
+		return nil
+	}
 	set = strings.TrimSpace(set)
 	pairs := strings.Split(set, ",")
 	val := reflect.ValueOf(current).Elem()
 	typ := val.Type()
+	lostTag := ""
 
 	for _, pair := range pairs {
 		parts := strings.SplitN(pair, "=", 2)
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
 			value := strings.TrimSpace(parts[1])
+			isVisited := false
 
 			for i := 0; i < typ.NumField(); i++ {
 				typeOfField := typ.Field(i)
@@ -331,6 +307,7 @@ func (current *Attack) SetValue(set string) error {
 				}
 
 				if tagName == key {
+					isVisited = true
 					field := val.Field(i)
 					if !field.CanSet() {
 						return fmt.Errorf("cannot set the value of Field: %s", typeOfField.Name)
@@ -339,14 +316,20 @@ func (current *Attack) SetValue(set string) error {
 					if err := setValue(field, value); err != nil {
 						return fmt.Errorf("failed setting %s: %w", key, err)
 					}
-
 				}
+
+			}
+			if !isVisited {
+				lostTag += fmt.Sprintf(" %s,", key)
 			}
 		}
 	}
 
-	return nil
+	if lostTag != "" {
+		return fmt.Errorf("Fields%s are not valid!", lostTag)
+	}
 
+	return nil
 }
 
 func setValue(field reflect.Value, value string) error {

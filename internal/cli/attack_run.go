@@ -59,7 +59,10 @@ Example:
 			return err
 		}
 
-		header := currentAttack.ValidateHeader()
+		header, err := currentAttack.ValidateHeader()
+		if err != nil {
+			return err
+		}
 
 		opts := attacks.Options{
 			URL:          currentAttack.AttackURL,

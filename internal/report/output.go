@@ -62,8 +62,8 @@ func PrintVerboseHeader(opts attacks.Options) {
 
 func PrintDefault(attacks []common.PlotC) {
 	for _, e := range attacks {
-		fmt.Printf("Attack: %s\n", e.Attack)
-
+		fmt.Printf("  Attack   : %s\n", e.Attack)
+		fmt.Printf("  Method   : %s\n", e.Results.PRes.Method)
 		total := e.Results.PRes.Success_Count + e.Results.PRes.Error_Count
 
 		fmt.Printf("  Requests : %d\n", total)

@@ -71,7 +71,10 @@ var attackEmailCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		header := currentAttack.ValidateHeader()
+		header, err := currentAttack.ValidateHeader()
+		if err != nil {
+			return err
+		}
 
 		opts := attacks.Options{
 			URL:          currentAttack.AttackURL,
@@ -174,26 +177,35 @@ func ValidateContentType(ct string) (string, error) {
 	return "", fmt.Errorf("Error!!!please choose between application/javascript, application/json, application/xml")
 }
 
-func (cAttack Attack) ValidateHeader() map[string]string {
+func (cAttack Attack) ValidateHeader() (map[string]string, error) {
 	slog.Debug("Validating header")
 	headers := make(map[string]string)
+
 	if strings.TrimSpace(cAttack.Header) == "" {
-		return headers
+		return headers, nil
 	}
+
 	pairs := strings.Split(cAttack.Header, ",")
-
 	for _, pair := range pairs {
-		parts := strings.SplitN(pair, "=", 2)
-
-		if len(parts) == 2 {
-			key := strings.TrimSpace(parts[0])
-			value := strings.TrimSpace(parts[1])
-
-			if key != "" {
-				headers[key] = value
-			}
+		pair = strings.TrimSpace(pair)
+		if pair == "" {
+			return nil, fmt.Errorf("empty header pair found")
 		}
+
+		parts := strings.SplitN(pair, "=", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid header format %q, expected key=value", pair)
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := strings.TrimSpace(parts[1])
+
+		if key == "" {
+			return nil, fmt.Errorf("header key cannot be empty in %q", pair)
+		}
+
+		headers[key] = value
 	}
 
-	return headers
+	return headers, nil
 }
