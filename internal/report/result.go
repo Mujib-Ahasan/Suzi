@@ -52,7 +52,7 @@ type LatencyStats struct {
 
 type Throughput struct {
 	RequestsPerSecond int     `json:"requestsPerSecond"`
-	BytesPerSecond    float64 `json:"bytesPerSecond,omitempty"`
+	ResBytesPerSecond float64 `json:"ResbytesPerSecond,omitempty"`
 }
 
 type ErrorStat struct {
@@ -64,5 +64,4 @@ type ErrorStat struct {
 type Timestamp struct {
 	StartedAt  string `json:"startedAt"`
 	FinishedAt string `json:"finishedAt"`
-	DurationMs int64  `json:"durationMs"`
 }

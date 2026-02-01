@@ -5,9 +5,10 @@ import (
 )
 
 type Result struct {
-	Status  string
-	Elapsed time.Duration
-	Error   error
+	Status        string
+	Elapsed       time.Duration
+	Error         error
+	ResponseBytes int64
 }
 
 type PResultIn struct {
@@ -36,4 +37,6 @@ type InResult struct {
 	P99                time.Duration
 	Max                time.Duration
 	Min                time.Duration
+	TotalElapsedTime   time.Duration
+	TotalRespBytes     int64
 }

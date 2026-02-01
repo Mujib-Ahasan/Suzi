@@ -1,6 +1,7 @@
 package report
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Mujib-Ahasan/Suzi/common"
@@ -23,17 +24,18 @@ func FromAttackList(list []common.PlotC) LoadTestResultAll {
 		successRequests = r.Results.PRes.Success_Count
 		failedRequests = r.Results.PRes.Error_Count
 
-		e := r.Results.Err
-		if e != nil {
-			key := e.Error()
+		for _, e := range r.Results.NRes {
+			if e.Error != nil {
+				key := e.Error.Error()
 
-			if _, ok := errorMap[key]; !ok {
-				errorMap[key] = &ErrorStat{
-					Type:  "execution_error",
-					Count: 0,
+				if _, ok := errorMap[key]; !ok {
+					errorMap[key] = &ErrorStat{
+						Type:  fmt.Sprintf(key),
+						Count: 0,
+					}
 				}
+				errorMap[key].Count++
 			}
-			errorMap[key].Count++
 		}
 
 		latency := LatencyStats{
@@ -70,12 +72,12 @@ func FromAttackList(list []common.PlotC) LoadTestResultAll {
 			Latency: latency,
 			Throughput: Throughput{
 				RequestsPerSecond: r.Results.PRes.RequestsPerSecond,
+				ResBytesPerSecond: float64(r.Results.PRes.TotalRespBytes) / r.Results.PRes.TotalElapsedTime.Seconds(),
 			},
 			Errors: errors,
 			Timestamp: Timestamp{
 				StartedAt:  start.Format(time.RFC3339),
 				FinishedAt: finished.Format(time.RFC3339),
-				DurationMs: finished.Sub(start).Microseconds(),
 			},
 		}
 
@@ -114,17 +116,18 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) LoadTestResultA
 		successRequests = r.Results.PRes.Success_Count
 		failedRequests = r.Results.PRes.Error_Count
 
-		e := r.Results.Err
-		if e != nil {
-			key := e.Error()
+		for _, e := range r.Results.NRes {
+			if e.Error != nil {
+				key := e.Error.Error()
 
-			if _, ok := errorMap[key]; !ok {
-				errorMap[key] = &ErrorStat{
-					Type:  "execution_error",
-					Count: 0,
+				if _, ok := errorMap[key]; !ok {
+					errorMap[key] = &ErrorStat{
+						Type:  fmt.Sprintf(key),
+						Count: 0,
+					}
 				}
+				errorMap[key].Count++
 			}
-			errorMap[key].Count++
 		}
 
 		latency := LatencyStats{
@@ -169,12 +172,12 @@ func FromAttackListEmail(list []common.PlotC, email mail.Config) LoadTestResultA
 			Latency: latency,
 			Throughput: Throughput{
 				RequestsPerSecond: r.Results.PRes.RequestsPerSecond,
+				ResBytesPerSecond: float64(r.Results.PRes.TotalRespBytes) / r.Results.PRes.TotalElapsedTime.Seconds(),
 			},
 			Errors: errors,
 			Timestamp: Timestamp{
 				StartedAt:  start.Format(time.RFC3339),
 				FinishedAt: finished.Format(time.RFC3339),
-				DurationMs: finished.Sub(start).Microseconds(),
 			},
 		}
 

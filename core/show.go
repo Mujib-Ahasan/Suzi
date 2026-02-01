@@ -13,7 +13,9 @@ func ShowResults(results []rs.Result, numRequests int, attack string, method str
 	var avg, p50, p90, p95, p99, max, min time.Duration
 
 	var successCount, errorCount int
+	var totalResBytes int64
 	latencies := make([]time.Duration, 0, successCount)
+
 	for _, r := range results {
 		if r.Error != nil {
 			errorCount++
@@ -24,6 +26,8 @@ func ShowResults(results []rs.Result, numRequests int, attack string, method str
 			successCount++
 			latencies = append(latencies, r.Elapsed)
 		}
+
+		totalResBytes += r.ResponseBytes
 	}
 
 	if successCount > 0 {
@@ -55,5 +59,7 @@ func ShowResults(results []rs.Result, numRequests int, attack string, method str
 		P99:                p99,
 		Max:                max,
 		Min:                min,
+		TotalRespBytes:     totalResBytes,
+		TotalElapsedTime:   totalTime,
 	}
 }

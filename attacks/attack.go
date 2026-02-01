@@ -2,6 +2,7 @@ package attacks
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log/slog"
 	"net/http"
@@ -11,53 +12,63 @@ import (
 	rs "github.com/Mujib-Ahasan/Suzi/common"
 )
 
-// setting it global so to avoid handshake each time(no TCP/TLS each time)
-var client_body *http.Client
+var (
+	client_body *http.Client
+	once        sync.Once
+)
 
 func makeHandshake() {
-	slog.Debug("New connection made... \n")
-	client_body = &http.Client{}
+	once.Do(func() {
+		slog.Debug("HTTP client initialized")
+		client_body = &http.Client{}
+	})
 }
 
-// = &http.Client{}
-
-// this function sends the HTTP request and send response woth some data through chanel.
 func makeRequest(opts Options, wg *sync.WaitGroup, resp_results chan<- rs.Result) {
 	defer wg.Done()
 	start := time.Now()
 
 	body := opts.ConvertBody()
 
-	// making a request
 	req, err := http.NewRequest(opts.Method, opts.URL, body)
 	if err != nil {
 		resp_results <- rs.Result{Error: err}
 		return
 	}
+
 	if (opts.Method == "POST" || opts.Method == "PUT" || opts.Method == "PATCH") && len(opts.Body) > 0 {
 		req.Header.Set("Content-Type", opts.ContentType)
 	}
+
 	for key, value := range opts.Headers {
 		req.Header.Set(key, value)
 	}
 
-	//setting timeout.
-	client_body.Timeout = opts.Timeout * time.Second
-	// sending that request....
+	// per-request timeout (SAFE)
+	ctx, cancel := context.WithTimeout(req.Context(), opts.Timeout*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+
 	resp, err := client_body.Do(req)
 	elapsed := time.Since(start)
 	if err != nil {
 		resp_results <- rs.Result{Error: err}
 		return
 	}
-	io.Copy(io.Discard, resp.Body)
 	defer resp.Body.Close()
-	resp_results <- rs.Result{Status: resp.Status, Elapsed: elapsed}
+
+	cr := &countingReadCloser{rc: resp.Body}
+	_, _ = io.Copy(io.Discard, cr)
+
+	resp_results <- rs.Result{
+		Status:        resp.Status,
+		Elapsed:       elapsed,
+		ResponseBytes: cr.bytes,
+	}
 }
 
 func (opts Options) ConvertBody() io.Reader {
 	var body io.Reader
-
 	if (opts.Method == "POST" || opts.Method == "PUT" || opts.Method == "PATCH") && len(opts.Body) > 0 {
 		body = bytes.NewReader(opts.Body)
 	}
