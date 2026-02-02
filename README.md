@@ -1,72 +1,124 @@
-#  Suzi Load Tester
-Suzi is a lightweight, flexible, and extensible HTTP load testing tool written in Go.
-It’s designed for developers and DevOps engineers who want quick insights into application performance without relying on heavy external tools.
+# Suzi ⚡
 
-## Features
-- ### Multiple Attack Types:
-     - Basic Load – send a fixed number of requests at a constant rate.
-     - Burst Load – hammer the server with a sudden spike of requests.
-     - Ramp-Up Load – gradually increase request rate from low to peak.
-     - Random Load - send requests in a random manner.
-- ### Latency Percentiles (p50, p90, p95, p99):
-  get detailed insights into response time distribution. Useful when need to get over all idea about user experience.
-- ### Result Visualization:
-     - Generates an interactive HTML report with charts (response time per request).
-     - Includes a latency summary table showing percentile breakdown.
-- ### Configurable Timeout per request:
-  simulate slow responses or protect against server hangs. One of the important feature in day-to-day server testing (basic).
-- ### Email Option:
-  Email notifications after testing or CI/CD integration can be sent for better review.
+**Suzi** is a lightweight, Go-based HTTP load testing tool built for **DevOps engineers**, **CI/CD pipelines**, and **developers running small to medium workloads**.
+
+It focuses on **simple configuration**, **repeatable attacks**, and **automation-friendly workflows**, making it easy to integrate into pipelines or run locally during development.
+
+---
+
+## ✨ Features
+
+- 🚀 Fast HTTP load testing written in Go
+- 🧪 Run attacks directly from the CLI
+- 📄 YAML-based configuration for repeatable tests
+- 📬 Email notifications after test completion
+- ✅ Pre-run validation to catch config errors early
+- 🔁 Ideal for CI/CD pipelines and automation
+
+---
 
 ## Installation
 - #### Clone the repo first:
        git clone https://github.com/Mujib-Ahasan/Suzi.git
        cd suzi
 - #### Build the binary:
-      go build -o suzi.exe  -> for windows
-      go build -o suzi -> for Linux/macOS
-- #### Run the examples below:
-       -------Disable the timeout and plot function just by removing the flags---------
-       //Basic attack
-      ./suzi -url https://example.com -req 50 -rate 5 -atk basic -timeout 5 -plot true
+      go build cmd/main.go -o suzi.exe  -> for windows
+      go build cmd/main.go -o suzi -> for Linux/macOS
+## 🧪 Commands
+- Runs an HTTP load test immediately and prints the result to stdout:
 
-       //Burst attack
-      ./suzi -url https://example.com -req 50 -atk burst -timeout 5 -plot true
+        suzi attack run [flags]
+   Example:
 
-       //Ramp-Up attack
-      ./suzi -url https://example.com -req 50  -atk rampup -timeout 5 -plot true
+        suzi attack run --url https://httpbin.org/get --req 5 --rate 5 --attack-type basic --timeout 5
+- Run an Attack with Email Notification
 
-       // Random attack
-      ./suzi -url https://example.com -req 50 -rate 5 -attack basic -timeout 5 -plot true
+        suzi attack email [flags]
+   Example:
+
+        suzi attack email --url https://httpbin.org/get --req 5 --rate 5 --attack-type basic --timeout 5 [email_flags]
+- Apply an Attack from YAML
+
+        suzi attack apply -f <file_path> [flags]
+  Example:
+
+        ./suzi attack apply  -f file_path
+- Generate YAML Configuration
+
+          suzi attack generate -f <file_path> [flags]
+     Example:
+
+        suzi attack generate -f attack.yaml --url https://example.com --requests 1000 --rate 50
+- Validate Configuration File
+
+      suzi attack validate -f <file_path> [flags]
+   Example:
+
+        suzi attack validate -f attack.yaml
+
 ## CLI Flags
 
 | Flag        | Default    | Description                              |
 | ----------- | ---------- | ---------------------------------------- |
-| `-url`      | (required) | Target site or API endpoint to test      |
-| `-req`      | 10         | Number of requests to send               |
-| `-atk`      | `basic`    | Attack type (`basic`, `burst`, `rampup`, `random`) |
-| `-method`   | `GET`      | HTTP method (GET, planning to add POST)  |
-| `-rate`     | 1          | Number of requests per second            |
-| `-timeout`  | 5          | Request timeout in seconds               |
-| `-cpus`     | NumCPU     | Number of CPU cores to use               |
-| `-email`     | `false`    | Send results via email        |
-| `-emailTo`     | `"you@local.test"`    | Receiver email-id       |
-| `-emailFrom`     | `"Suzi <noreply@gmail.com>"`    | Sender email-id         |
-| `-smtpHost`     | `"localhost"`    | For production use "smtp.gmail.com"     |
-| `-smtpPort`     | `1025`    |For Production use 465 (donot use 587)     |
-| `-smtp-user`     | `os.Getenv("SMTP_USER")`    | Set to the email address that owns the app password (set env var for this)|
-| `-smtp-pass`     | `os.Getenv("SMTP_PASS")`    | App Password generated from Gmail (set env var for this)  |
-| `-smtpTLS`     | `false`    | True for production        |
-| `-smtp-retries`     | `3`    | Email send retries         |
-| `-smtp-timeout`     | `10`    |Email send timeout in seconds      |
+| `url`      | (required) | Target site or API endpoint to test      |
+| `req`      | 10         | Number of requests to send               |
+| `atk`      | `basic`    | Attack type (`basic`, `burst`, `rampup`, `random`) |
+| `method`   | `GET`      | HTTP method (GET, planning to add POST)  |
+| `set`     | ""          | set key1=val1,key2=val2 fields at runtime|
+| `rate`     | 1          | Number of requests per second            |
+| `quiet`     | `false`   | console prinitng format for short result |
+| `verbose`     | `false` | console prinitng format for long result  |
+| `format`     | `test`   | machine readable format (JOSN and YAML     |
+| `output`     | ""   | save the format result in mentioned path     |
+| `timeout`  | 5          | Request timeout in seconds               |
+| `cpus`     | NumCPU     | Number of CPU cores to use               |
+| `email`     | `false`    | Send results via email        |
+| `emailTo`     | `"you@local.test"`    | Receiver email-id       |
+| `emailFrom`     | `"Suzi <noreply@gmail.com>"`    | Sender email-id         |
+| `smtpHost`     | `"localhost"`    | For production use "smtp.gmail.com"     |
+| `smtpPort`     | `1025`    |For Production use 465 (donot use 587)     |
+| `smtp-user`     | `os.Getenv("SMTP_USER")`    | Set to the email address that owns the app password (set env var for this)|
+| `smtp-pass`     | `os.Getenv("SMTP_PASS")`    | App Password generated from Gmail (set env var for this)  |
+| `smtpTLS`     | `false`    | True for production        |
+| `smtp-retries`     | `3`    | Email send retries         |
+| `smtp-timeout`     | `10`    |Email send timeout in seconds      |
+
+### Example YAML file: 
+```
+url: https://httpbin.org/get
+rate: 5
+requests: 10
+timeout: 5s
+attack-type: basic
+method: post
+body: |+
+  {
+    "name": "abc",
+    "email":"abc@example.com",
+    "role": "developer",
+    "active": false
+  }
+content-type: application/json
+emailEnable: true
+email:
+  to: dev@gmail.com
+  from: Suzi <noreply@gmail.com>
+  smtp:
+    host: localhost
+    port: 1025
+    retries: 3
+    timeout_seconds: 10
+```
+
+**NOTE:YAML file can be easily generated by `suzi attack generate [flags]` command**
 
 ## Email Option
 - For Local testing use Docker `docker run --name mailhog -d -p 8025:8025 -p 1025:1025 mailhog/mailhog`. After starting the container open localhost at port 8025. </br>
-  Run the command `./suzi -url https://example.com -rate 5 -req 50 -email -atk mailAll`
+  Run the command `./suzi attack email --url https://httpbin.org/get --rate 5 --req 50 --email --attack-type all`
 
-- For production usecase run the command carefully `./suzi -url https://example.com -rate 5 -req 50 -email -atk mailAll -email /` </br>
+- For production usecase run the command carefully `./suzi attack email --url https://example.com --rate 5 --req 50  --attack all  /` </br>
    `-emailTo "<receiver email-id> -emailFrom "Suzi <email-addr that owns app-password>" /` </br>
-   `-smtpHost "smtp.gmail.com" -smtpPort 465  -smtpTLS true` </br>
+   `--smtpHost "smtp.gmail.com" --smtpPort 465  --smtpTLS true` </br>
   After that receiver should get a email like this.
 ![WhatsApp Image 2025-09-09 at 1 31 07 PM](https://github.com/user-attachments/assets/5e93931f-4f00-44fb-8c12-8be5364f2e58)
 ![WhatsApp Image 2025-09-09 at 1 32 00 PM](https://github.com/user-attachments/assets/94da2a83-6c7d-4220-9e19-05db4411a15b)
@@ -77,7 +129,7 @@ It’s designed for developers and DevOps engineers who want quick insights into
 
 ## Now The Most Fun One - Why Suzi? 🤔
 - Most load testers (like JMeter or Locust) are heavy, complex, and overkill for quick checks.
-- Our Suzi Offers:
+-  Suzi Offers:
      - Simple – one binary, easy flags, no config files.
      - Fast – written in Go with goroutines for concurrency.
      - Extensible – easy to add attack strategies and plotting.
